@@ -20,15 +20,51 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    // Get the canvas context
-    canvasContextRef.current = canvasRef.current.getContext('2d');
-    
-    // Set canvas size to match video dimensions
+    const resizeCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const videoElement = document.querySelector('video');
+      if (!videoElement) return;
+
+      // Get the video's natural dimensions
+      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
+      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
+
+      // Get the container dimensions
+      const containerWidth = videoElement.clientWidth;
+      const containerHeight = videoElement.clientHeight;
+
+      // Calculate the scaling factor to maintain aspect ratio
+      const scale = Math.min(
+        containerWidth / videoWidth,
+        containerHeight / videoHeight
+      );
+
+      // Set canvas dimensions to match the scaled video size
+      canvas.width = videoWidth * scale;
+      canvas.height = videoHeight * scale;
+
+      // Update the canvas context
+      canvasContextRef.current = canvas.getContext('2d');
+    };
+
+    // Create ResizeObserver to handle container size changes
+    const resizeObserver = new ResizeObserver(resizeCanvas);
     const videoElement = document.querySelector('video');
     if (videoElement) {
-      canvasRef.current.width = videoElement.clientWidth;
-      canvasRef.current.height = videoElement.clientHeight;
+      resizeObserver.observe(videoElement);
     }
+
+    // Initial resize
+    resizeCanvas();
+
+    return () => {
+      if (videoElement) {
+        resizeObserver.unobserve(videoElement);
+      }
+      resizeObserver.disconnect();
+    };
   }, [canvasRef]);
 
   useEffect(() => {
@@ -52,8 +88,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
     const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
-    console.log('Current EAR:', avgEAR.toFixed(3), 'Last EAR:', lastEARRef.current.toFixed(3), 'State:', lastEyeStateRef.current);
-
     if (isClosing && lastEyeStateRef.current === 'open') {
       console.log('BLINK DETECTED! EAR:', avgEAR.toFixed(3));
       lastEyeStateRef.current = 'closed';
@@ -73,14 +107,13 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const y = point.y * canvas.height;
       
       ctx.beginPath();
-      ctx.arc(x, y, 3, 0, 2 * Math.PI);
+      ctx.arc(x, y, 2, 0, 2 * Math.PI);
       ctx.fill();
     });
 
-    // Draw simplified eye outlines (only the outer edges)
+    // Draw simplified eye outlines
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
-      // Only draw the outer edge of the eye
       const upperIndices = indices.slice(0, indices.length / 2);
       const lowerIndices = indices.slice(indices.length / 2).reverse();
       
@@ -104,7 +137,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       
       ctx.closePath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.stroke();
     };
 

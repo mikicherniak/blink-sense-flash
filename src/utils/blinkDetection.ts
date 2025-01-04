@@ -7,28 +7,61 @@ export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
 // MediaPipe FaceMesh indices for eye contours
-// These indices correspond to the actual eye contours in the MediaPipe face mesh model
-export const LEFT_EYE = [33, 133, 160, 159, 158, 144]; // Upper and lower eyelid points
-export const RIGHT_EYE = [362, 263, 385, 386, 387, 373]; // Upper and lower eyelid points
+// These indices are for the main eye landmarks in MediaPipe's 468-point model
+export const LEFT_EYE = [
+  362, // left-most point
+  374, // top point
+  263, // right-most point
+  386, // bottom point
+  373, // bottom-left point
+  390  // bottom-right point
+];
+
+export const RIGHT_EYE = [
+  33,  // left-most point
+  159, // top point
+  133, // right-most point
+  145, // bottom point
+  144, // bottom-left point
+  153  // bottom-right point
+];
 
 interface Point {
   x: number;
   y: number;
+  z: number;
 }
 
-const distance = (p1: Point, p2: Point) => 
-  Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+const euclideanDistance = (p1: Point, p2: Point) => {
+  return Math.sqrt(
+    Math.pow(p2.x - p1.x, 2) + 
+    Math.pow(p2.y - p1.y, 2) + 
+    Math.pow(p2.z - p1.z, 2)
+  );
+};
 
 export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
-  const getPoint = (idx: number) => ({
-    x: landmarks[idx].x,
-    y: landmarks[idx].y
-  });
+  // Get the eye corner points
+  const corner1 = landmarks[eyeIndices[0]];
+  const corner2 = landmarks[eyeIndices[2]];
   
-  const verticalDist1 = distance(getPoint(eyeIndices[1]), getPoint(eyeIndices[5]));
-  const verticalDist2 = distance(getPoint(eyeIndices[2]), getPoint(eyeIndices[4]));
-  const horizontalDist = distance(getPoint(eyeIndices[0]), getPoint(eyeIndices[3]));
+  // Get the top and bottom points
+  const top = landmarks[eyeIndices[1]];
+  const bottom = landmarks[eyeIndices[3]];
   
-  // EAR = (v1 + v2) / (2 * h), where v1, v2 are vertical distances and h is horizontal distance
-  return (verticalDist1 + verticalDist2) / (2 * horizontalDist);
+  // Get the additional points for better measurement
+  const p1 = landmarks[eyeIndices[4]];
+  const p2 = landmarks[eyeIndices[5]];
+  
+  // Calculate vertical distances (average of two measurements)
+  const v1 = euclideanDistance(p1, p2);
+  const v2 = euclideanDistance(top, bottom);
+  
+  // Calculate horizontal distance
+  const h = euclideanDistance(corner1, corner2);
+  
+  // Calculate EAR using the formula: EAR = (v1 + v2) / (2 * h)
+  if (h === 0) return 1.0; // Prevent division by zero
+  
+  return (v1 + v2) / (2.0 * h);
 };

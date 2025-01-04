@@ -81,10 +81,16 @@ export const BlinkDetector = () => {
   const setupFaceMesh = async () => {
     try {
       await tf.setBackend('webgl');
+      await tf.ready(); // Ensure TensorFlow.js is ready
       faceMeshRef.current = await createFaceMesh();
-      faceMeshRef.current.onResults(onResults);
+      
+      // Set up the onResults callback after initialization
+      if (faceMeshRef.current) {
+        faceMeshRef.current.onResults(onResults);
+      }
     } catch (error) {
       console.error('Error setting up FaceMesh:', error);
+      setIsLoading(false);
     }
   };
 

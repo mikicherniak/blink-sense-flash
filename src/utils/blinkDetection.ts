@@ -1,4 +1,4 @@
-export const BLINK_THRESHOLD = 0.23; // Adjusted for better sensitivity
+export const BLINK_THRESHOLD = 0.5; // Increased from 0.23 for better blink detection
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 

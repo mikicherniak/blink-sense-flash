@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 13% 95%;
     --foreground: 200 50% 20%;
     
     --primary: 190 80% 40%;
@@ -15,7 +15,7 @@
     --secondary: 160 30% 45%;
     --secondary-foreground: 190 20% 98%;
     
-    --muted: 0 0% 90%;
+    --muted: 220 13% 90%;
     --muted-foreground: 200 50% 40%;
     
     --accent: 160 30% 45%;

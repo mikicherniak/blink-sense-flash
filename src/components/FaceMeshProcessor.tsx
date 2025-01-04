@@ -17,17 +17,29 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const lastEARRef = useRef<number>(1);
 
+  // Update canvas dimensions whenever video size changes
   useEffect(() => {
-    if (!canvasRef.current) return;
-    
-    // Get the canvas context
-    canvasContextRef.current = canvasRef.current.getContext('2d');
-    
-    // Set canvas size to match video dimensions
+    const updateCanvasSize = () => {
+      if (!canvasRef.current) return;
+      const videoElement = document.querySelector('video');
+      if (videoElement) {
+        const { clientWidth, clientHeight } = videoElement;
+        canvasRef.current.width = clientWidth;
+        canvasRef.current.height = clientHeight;
+        // Get fresh context after resize
+        canvasContextRef.current = canvasRef.current.getContext('2d');
+      }
+    };
+
+    // Initial setup
+    updateCanvasSize();
+
+    // Add resize observer to video element
     const videoElement = document.querySelector('video');
     if (videoElement) {
-      canvasRef.current.width = videoElement.clientWidth;
-      canvasRef.current.height = videoElement.clientHeight;
+      const resizeObserver = new ResizeObserver(updateCanvasSize);
+      resizeObserver.observe(videoElement);
+      return () => resizeObserver.disconnect();
     }
   }, [canvasRef]);
 
@@ -38,7 +50,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    // Clear canvas
+    // Clear canvas before each redraw
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
@@ -65,22 +77,9 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks for debugging
-    ctx.fillStyle = '#00FF00';
-    [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
-      const point = landmarks[index];
-      const x = point.x * canvas.width;
-      const y = point.y * canvas.height;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, 3, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-
-    // Draw simplified eye outlines (only the outer edges)
+    // Draw simplified eye outlines
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
-      // Only draw the outer edge of the eye
       const upperIndices = indices.slice(0, indices.length / 2);
       const lowerIndices = indices.slice(indices.length / 2).reverse();
       
@@ -108,8 +107,21 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.stroke();
     };
 
+    // Draw eye outlines
     drawSimplifiedEyeOutline(LEFT_EYE);
     drawSimplifiedEyeOutline(RIGHT_EYE);
+
+    // Draw key points for better tracking
+    ctx.fillStyle = '#00FF00';
+    [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
+      const point = landmarks[index];
+      const x = point.x * canvas.width;
+      const y = point.y * canvas.height;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.fill();
+    });
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

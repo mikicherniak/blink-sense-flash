@@ -4,6 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
+// Update the models path to ensure it's relative to the public directory
 const MODELS_PATH = '/models';
 const BLINK_THRESHOLD = 0.5;
 const MIN_BLINKS_PER_MINUTE = 15;
@@ -18,24 +19,9 @@ export const BlinkDetector = () => {
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
   const { toast } = useToast();
   
-  useEffect(() => {
-    loadModels();
-    setupCamera();
-    
-    const blinkInterval = setInterval(() => {
-      setBlinksPerMinute(blinkCount);
-      setBlinkCount(0);
-      
-      if (blinksPerMinute < MIN_BLINKS_PER_MINUTE) {
-        triggerBlinkReminder();
-      }
-    }, MEASUREMENT_PERIOD);
-    
-    return () => clearInterval(blinkInterval);
-  }, []);
-
   const loadModels = async () => {
     try {
+      // Load models in sequence and await each one
       await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH);
       setIsLoading(false);
@@ -43,7 +29,7 @@ export const BlinkDetector = () => {
       console.error('Error loading models:', error);
       toast({
         title: "Error",
-        description: "Failed to load face detection models",
+        description: "Failed to load face detection models. Please ensure models are available.",
         variant: "destructive"
       });
     }
@@ -59,11 +45,29 @@ export const BlinkDetector = () => {
       console.error('Error accessing camera:', error);
       toast({
         title: "Error",
-        description: "Failed to access camera",
+        description: "Failed to access camera. Please ensure camera permissions are granted.",
         variant: "destructive"
       });
     }
   };
+
+  useEffect(() => {
+    // Load models first, then setup camera
+    loadModels().then(() => {
+      setupCamera();
+    });
+    
+    const blinkInterval = setInterval(() => {
+      setBlinksPerMinute(blinkCount);
+      setBlinkCount(0);
+      
+      if (blinksPerMinute < MIN_BLINKS_PER_MINUTE) {
+        triggerBlinkReminder();
+      }
+    }, MEASUREMENT_PERIOD);
+    
+    return () => clearInterval(blinkInterval);
+  }, []);
 
   const detectBlinks = async () => {
     if (!videoRef.current || !canvasRef.current) return;

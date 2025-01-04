@@ -143,8 +143,8 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <h1 className="absolute top-8 text-6xl font-bold text-white/80 z-10">Blinx</h1>
-      <div className="absolute top-32 right-8 space-y-4 z-10">
+      <h1 className="absolute top-8 text-6xl font-bold text-white/80 z-10">BlinX</h1>
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-10">
         <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-3">
           <span className="text-sm text-white/60">Current BPM</span>
           <div className="text-2xl font-bold text-white">{getCurrentBlinksPerMinute()}</div>

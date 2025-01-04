@@ -15,6 +15,7 @@ export const BlinkDetector = () => {
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const [faceMeshResults, setFaceMeshResults] = useState<any>(null);
   const [monitoringStartTime] = useState(Date.now());
+  const [totalBlinks, setTotalBlinks] = useState(0);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,6 +28,18 @@ export const BlinkDetector = () => {
     const oneMinuteAgo = now - 60000;
     const recentBlinks = blinksInLastMinute.filter(time => time > oneMinuteAgo);
     return recentBlinks.length;
+  };
+
+  const getAverageBlinksPerMinute = () => {
+    const sessionDurationMinutes = (Date.now() - monitoringStartTime) / 60000;
+    return sessionDurationMinutes > 0 ? Math.round((totalBlinks / sessionDurationMinutes) * 10) / 10 : 0;
+  };
+
+  const getSessionDuration = () => {
+    const durationMs = Date.now() - monitoringStartTime;
+    const minutes = Math.floor(durationMs / 60000);
+    const seconds = Math.floor((durationMs % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const checkBlinkRate = () => {
@@ -48,6 +61,7 @@ export const BlinkDetector = () => {
     const now = Date.now();
     setBlinksInLastMinute(prev => [...prev, now]);
     setLastBlinkTime(now);
+    setTotalBlinks(prev => prev + 1);
   };
 
   useEffect(() => {
@@ -129,9 +143,20 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <div className="absolute top-4 right-4 bg-primary/10 rounded-lg p-3 z-10">
-        <span className="text-lg font-bold">{getCurrentBlinksPerMinute()}</span>
-        <span className="text-sm ml-2">blinks/min</span>
+      <h1 className="absolute top-8 text-6xl font-bold text-white/80 z-10">Blinx</h1>
+      <div className="absolute top-32 right-8 space-y-4 z-10">
+        <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-3">
+          <span className="text-sm text-white/60">Current BPM</span>
+          <div className="text-2xl font-bold text-white">{getCurrentBlinksPerMinute()}</div>
+        </div>
+        <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-3">
+          <span className="text-sm text-white/60">Average BPM</span>
+          <div className="text-2xl font-bold text-white">{getAverageBlinksPerMinute()}</div>
+        </div>
+        <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-3">
+          <span className="text-sm text-white/60">Session Duration</span>
+          <div className="text-2xl font-bold text-white">{getSessionDuration()}</div>
+        </div>
       </div>
       
       <VideoDisplay 

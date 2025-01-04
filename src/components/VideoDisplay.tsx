@@ -46,12 +46,11 @@ export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoad
         playsInline
         muted
         onPlay={onPlay}
-        className="absolute inset-0 w-full h-full object-contain"
+        className="absolute inset-0 w-full h-full object-cover"
       />
       <canvas 
         ref={canvasRef} 
         className="absolute inset-0 w-full h-full pointer-events-none"
-        style={{ objectFit: 'contain' }}
       />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">

@@ -63,7 +63,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.arc(
         point.x * canvas.width,
         point.y * canvas.height,
-        3, // Slightly larger points for better visibility
+        1.5, // Reduced point size for better visibility
         0,
         2 * Math.PI
       );

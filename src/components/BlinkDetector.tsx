@@ -60,15 +60,16 @@ export const BlinkDetector = () => {
     
     const blinkInterval = setInterval(() => {
       setBlinksPerMinute(blinkCount);
-      setBlinkCount(0);
       
-      if (blinksPerMinute < MIN_BLINKS_PER_MINUTE) {
+      if (blinkCount < MIN_BLINKS_PER_MINUTE) {
         triggerBlinkReminder();
       }
+      
+      setBlinkCount(0);
     }, MEASUREMENT_PERIOD);
     
     return () => clearInterval(blinkInterval);
-  }, []);
+  }, [blinkCount]);
 
   const detectBlinks = async () => {
     if (!videoRef.current || !canvasRef.current || !modelsLoadedRef.current) return;
@@ -115,17 +116,29 @@ export const BlinkDetector = () => {
 
   const triggerBlinkReminder = () => {
     const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 flash-overlay z-50';
+    overlay.style.position = 'fixed';
+    overlay.style.inset = '0';
+    overlay.style.backgroundColor = 'white';
+    overlay.style.zIndex = '9999';
+    overlay.style.animation = 'flash 0.2s ease-out forwards';
+    
+    const keyframes = `
+      @keyframes flash {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+    `;
+    
+    const style = document.createElement('style');
+    style.textContent = keyframes;
+    document.head.appendChild(style);
+    
     document.body.appendChild(overlay);
     
     setTimeout(() => {
       document.body.removeChild(overlay);
+      document.head.removeChild(style);
     }, 200);
-    
-    toast({
-      title: "Blink Reminder",
-      description: "Your blink rate is low. Remember to blink more frequently!",
-    });
   };
 
   return (
@@ -144,7 +157,10 @@ export const BlinkDetector = () => {
             autoPlay
             muted
             playsInline
-            onPlay={detectBlinks}
+            onPlay={() => {
+              setIsLoading(false);
+              detectBlinks();
+            }}
             className="w-full h-full object-cover"
           />
           <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />

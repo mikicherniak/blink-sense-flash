@@ -23,32 +23,25 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   }, [canvasRef]);
 
   useEffect(() => {
-    if (!canvasRef.current || !results.multiFaceLandmarks?.length) {
-      console.log('No canvas or landmarks available');
-      return;
-    }
+    if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
 
     const canvas = canvasRef.current;
     const ctx = canvasContextRef.current;
-    if (!ctx) {
-      console.log('No canvas context');
-      return;
-    }
+    if (!ctx) return;
 
-    // Clear canvas
+    // Clear canvas only when we have new landmarks
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
-    console.log('Got landmarks:', landmarks ? 'yes' : 'no');
     
     // Calculate EAR for both eyes
     const leftEAR = calculateEAR(landmarks, LEFT_EYE);
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    // Adjust these thresholds if needed
+    // Add hysteresis to prevent rapid state changes
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
-    const isOpening = avgEAR >= BLINK_THRESHOLD && lastEARRef.current < BLINK_THRESHOLD;
+    const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
     console.log('Current EAR:', avgEAR.toFixed(3), 'Last EAR:', lastEARRef.current.toFixed(3), 'State:', lastEyeStateRef.current);
 
@@ -63,48 +56,20 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks using actual pixel coordinates
+    // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
-    ctx.strokeStyle = '#00FF00';
-    ctx.lineWidth = 2;
-
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      if (point) {
-        console.log(`Drawing point at ${point.x * canvas.width}, ${point.y * canvas.height}`);
-        ctx.beginPath();
-        ctx.arc(
-          point.x * canvas.width,
-          point.y * canvas.height,
-          2, // Exactly 2px radius
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-        ctx.stroke();
-      }
-    });
-
-    // Draw lines connecting the eye landmarks
-    const drawEyeOutline = (eyeIndices: number[]) => {
       ctx.beginPath();
-      eyeIndices.forEach((index, i) => {
-        const point = landmarks[index];
-        if (point) {
-          if (i === 0) {
-            ctx.moveTo(point.x * canvas.width, point.y * canvas.height);
-          } else {
-            ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-          }
-        }
-      });
-      ctx.closePath();
-      ctx.stroke();
-    };
-
-    drawEyeOutline(LEFT_EYE);
-    drawEyeOutline(RIGHT_EYE);
-
+      ctx.arc(
+        point.x * canvas.width,
+        point.y * canvas.height,
+        2,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+    });
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

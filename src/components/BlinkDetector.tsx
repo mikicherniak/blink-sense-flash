@@ -75,11 +75,7 @@ export const BlinkDetector = () => {
         video: { 
           width: { ideal: 640 },
           height: { ideal: 480 },
-          facingMode: 'user',
-          // Using standard MediaTrackConstraints properties
-          autoExposureMode: 'continuous',
-          focusMode: 'continuous',
-          whiteBalanceMode: 'continuous'
+          facingMode: 'user'
         } 
       });
       

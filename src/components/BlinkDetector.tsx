@@ -8,7 +8,7 @@ import { createFaceMesh } from '@/utils/faceMeshSetup';
 
 const MIN_BLINKS_PER_MINUTE = 15;
 const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
-const BLINK_THRESHOLD = 0.2;
+const BLINK_THRESHOLD = 0.25; // Adjusted threshold
 const LEFT_EYE = [362, 385, 387, 263, 373, 380];
 const RIGHT_EYE = [33, 160, 158, 133, 153, 144];
 
@@ -21,6 +21,7 @@ export const BlinkDetector = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const faceMeshRef = useRef<any>(null);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
   const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
     const getPoint = (idx: number) => ({
@@ -42,10 +43,16 @@ export const BlinkDetector = () => {
     if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!canvasContextRef.current) {
+      canvasContextRef.current = canvas.getContext('2d');
+    }
+    const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Only clear the canvas when drawing new points
+    if (results.multiFaceLandmarks.length > 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
     
     const landmarks = results.multiFaceLandmarks[0];
     
@@ -54,16 +61,23 @@ export const BlinkDetector = () => {
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    // Detect blink
+    console.log('Average EAR:', avgEAR); // Debug log
+
+    // Detect blink with adjusted logic
     if (avgEAR < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
+      console.log('Blink detected!'); // Debug log
       lastEyeStateRef.current = 'closed';
-      setBlinkCount(prev => prev + 1);
+      setBlinkCount(prev => {
+        console.log('Incrementing blink count from:', prev); // Debug log
+        return prev + 1;
+      });
       setLastBlinkTime(Date.now());
     } else if (avgEAR >= BLINK_THRESHOLD && lastEyeStateRef.current === 'closed') {
       lastEyeStateRef.current = 'open';
+      console.log('Eyes opened'); // Debug log
     }
 
-    // Draw facial landmarks
+    // Draw facial landmarks (only when face is detected)
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       ctx.beginPath();
@@ -131,6 +145,7 @@ export const BlinkDetector = () => {
     init();
 
     const blinkInterval = setInterval(() => {
+      console.log('Minute interval - Current blink count:', blinkCount); // Debug log
       setBlinksPerMinute(blinkCount);
       if (blinkCount < MIN_BLINKS_PER_MINUTE) {
         triggerBlinkReminder();

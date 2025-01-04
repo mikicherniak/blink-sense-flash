@@ -77,34 +77,15 @@ export const BlinkDetector = () => {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: 'user',
-          // Add advanced constraints for zoom
-          advanced: [
-            {
-              zoom: 2.0 // Zoom level (2x zoom)
-            },
-            {
-              // Optimize for face detection
-              exposureMode: 'continuous',
-              focusMode: 'continuous',
-              whiteBalanceMode: 'continuous'
-            }
-          ]
+          // Basic constraints for better face detection
+          exposureMode: 'continuous',
+          focusMode: 'continuous',
+          whiteBalanceMode: 'continuous'
         } 
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        
-        // Get video track to apply constraints
-        const videoTrack = stream.getVideoTracks()[0];
-        const capabilities = videoTrack.getCapabilities();
-        
-        // Apply zoom if supported
-        if (capabilities.zoom) {
-          await videoTrack.applyConstraints({
-            advanced: [{ zoom: 2.0 }]
-          });
-        }
       }
     } catch (error) {
       console.error('Error accessing camera:', error);

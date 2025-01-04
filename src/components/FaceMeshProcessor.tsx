@@ -77,28 +77,39 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.fill();
     });
 
-    // Draw lines connecting the eye landmarks
-    const drawEyeOutline = (indices: number[]) => {
+    // Draw simplified eye outlines (only the outer edges)
+    const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
-      indices.forEach((index, i) => {
+      // Only draw the outer edge of the eye
+      const upperIndices = indices.slice(0, indices.length / 2);
+      const lowerIndices = indices.slice(indices.length / 2).reverse();
+      
+      // Draw upper lid
+      upperIndices.forEach((index, i) => {
         const point = landmarks[index];
         const x = point.x * canvas.width;
         const y = point.y * canvas.height;
         
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       });
+      
+      // Draw lower lid
+      lowerIndices.forEach((index) => {
+        const point = landmarks[index];
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
+        ctx.lineTo(x, y);
+      });
+      
       ctx.closePath();
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 2;
       ctx.stroke();
     };
 
-    drawEyeOutline(LEFT_EYE);
-    drawEyeOutline(RIGHT_EYE);
+    drawSimplifiedEyeOutline(LEFT_EYE);
+    drawSimplifiedEyeOutline(RIGHT_EYE);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

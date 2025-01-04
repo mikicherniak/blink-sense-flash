@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { calculateEAR, LEFT_EYE, RIGHT_EYE, BLINK_THRESHOLD } from '@/utils/blinkDetection';
+import { calculateEAR, LEFT_EYE, RIGHT_EYE, BLINK_THRESHOLD, BLINK_BUFFER } from '@/utils/blinkDetection';
 
 interface FaceMeshProcessorProps {
   results: any;
@@ -15,6 +15,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   lastEyeStateRef
 }) => {
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const lastEARRef = useRef<number>(1);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -38,18 +39,22 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    console.log('Current eye state:', lastEyeStateRef.current);
-    console.log('Average EAR:', avgEAR, 'Threshold:', BLINK_THRESHOLD);
+    // Add hysteresis to prevent rapid state changes
+    const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
+    const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
-    // Detect blink
-    if (avgEAR < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
-      console.log('BLINK DETECTED! EAR:', avgEAR);
+    console.log('Current EAR:', avgEAR.toFixed(3), 'Last EAR:', lastEARRef.current.toFixed(3), 'State:', lastEyeStateRef.current);
+
+    if (isClosing && lastEyeStateRef.current === 'open') {
+      console.log('BLINK DETECTED! EAR:', avgEAR.toFixed(3));
       lastEyeStateRef.current = 'closed';
       onBlink();
-    } else if (avgEAR >= BLINK_THRESHOLD && lastEyeStateRef.current === 'closed') {
-      console.log('Eyes reopened. EAR:', avgEAR);
+    } else if (isOpening && lastEyeStateRef.current === 'closed') {
+      console.log('Eyes reopened. EAR:', avgEAR.toFixed(3));
       lastEyeStateRef.current = 'open';
     }
+
+    lastEARRef.current = avgEAR;
 
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';

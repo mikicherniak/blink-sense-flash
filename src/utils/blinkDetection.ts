@@ -1,4 +1,5 @@
-export const BLINK_THRESHOLD = 0.75; // Updated threshold based on observed blink patterns
+export const BLINK_THRESHOLD = 0.65; // Lowered threshold to catch more blinks
+export const BLINK_BUFFER = 0.1; // Buffer to prevent rapid state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 

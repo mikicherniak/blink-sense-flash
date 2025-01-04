@@ -137,7 +137,8 @@ export const BlinkDetector = () => {
   }, []);
 
   useEffect(() => {
-    const checkInterval = setInterval(checkBlinkRate, 1000);
+    // Check blink rate every 10 seconds after the first minute
+    const checkInterval = setInterval(checkBlinkRate, 10000);
     return () => clearInterval(checkInterval);
   }, [blinksInLastMinute]);
 

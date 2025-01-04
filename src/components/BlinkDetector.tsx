@@ -16,8 +16,8 @@ export const BlinkDetector = () => {
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
   const modelsLoadedRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const loadModels = async () => {
     try {
@@ -26,7 +26,7 @@ export const BlinkDetector = () => {
         faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH)
       ]);
       modelsLoadedRef.current = true;
-      setIsLoading(false);
+      console.log('Models loaded successfully');
     } catch (error) {
       console.error('Error loading models:', error);
     }
@@ -34,9 +34,16 @@ export const BlinkDetector = () => {
 
   const setupCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: 640,
+          height: 480,
+          facingMode: 'user'
+        } 
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        console.log('Camera setup successful');
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
@@ -44,12 +51,12 @@ export const BlinkDetector = () => {
   };
 
   useEffect(() => {
-    loadModels().then(() => {
-      setupCamera();
-    });
+    loadModels();
+    setupCamera();
     
     const blinkInterval = setInterval(() => {
       setBlinksPerMinute(blinkCount);
+      console.log('Current blink count:', blinkCount);
       
       if (blinkCount < MIN_BLINKS_PER_MINUTE) {
         triggerBlinkReminder();
@@ -58,7 +65,14 @@ export const BlinkDetector = () => {
       setBlinkCount(0);
     }, MEASUREMENT_PERIOD);
     
-    return () => clearInterval(blinkInterval);
+    return () => {
+      clearInterval(blinkInterval);
+      // Cleanup camera stream
+      if (videoRef.current?.srcObject) {
+        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
   }, [blinkCount]);
 
   const getEyeAspectRatio = (eyePoints: any[]) => {
@@ -78,7 +92,10 @@ export const BlinkDetector = () => {
   };
 
   const detectBlinks = async () => {
-    if (!videoRef.current || !canvasRef.current || !modelsLoadedRef.current) return;
+    if (!videoRef.current || !modelsLoadedRef.current) {
+      console.log('Video or models not ready');
+      return;
+    }
 
     const detection = await faceapi
       .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
@@ -92,12 +109,13 @@ export const BlinkDetector = () => {
       const rightEyeAspectRatio = getEyeAspectRatio(rightEye);
       
       const averageEyeAspectRatio = (leftEyeAspectRatio + rightEyeAspectRatio) / 2;
+      console.log('Eye aspect ratio:', averageEyeAspectRatio);
       
       if (averageEyeAspectRatio < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
         lastEyeStateRef.current = 'closed';
         setBlinkCount(prev => prev + 1);
         setLastBlinkTime(Date.now());
-        console.log('Blink detected!'); // Debug log
+        console.log('Blink detected!');
       } else if (averageEyeAspectRatio >= BLINK_THRESHOLD) {
         lastEyeStateRef.current = 'open';
       }
@@ -138,15 +156,15 @@ export const BlinkDetector = () => {
       <Card className="w-full max-w-2xl p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-center text-primary">Blink Monitor</h2>
         
-        {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p>Loading face detection models...</p>
-          </div>
-        )}
-        
         <VideoDisplay 
-          onPlay={detectBlinks}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          onPlay={() => {
+            setIsLoading(false);
+            detectBlinks();
+          }}
           setIsLoading={setIsLoading}
+          isLoading={isLoading}
         />
         
         <BlinkStats 

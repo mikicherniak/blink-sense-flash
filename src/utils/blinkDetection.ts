@@ -2,10 +2,10 @@ export const BLINK_THRESHOLD = 0.23; // Adjusted for better sensitivity
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
-// Updated landmark indices for more accurate eye tracking
-// These indices correspond to the actual eye contours in MediaPipe FaceMesh
-export const LEFT_EYE = [386, 374, 373, 390, 249, 263];
-export const RIGHT_EYE = [159, 145, 144, 163, 7, 33];
+// MediaPipe FaceMesh indices for eye contours
+// These indices correspond to the actual eye contours
+export const LEFT_EYE = [33, 133, 160, 159, 158, 144]; // Upper and lower eyelid points
+export const RIGHT_EYE = [362, 263, 385, 386, 387, 373]; // Upper and lower eyelid points
 
 interface Point {
   x: number;

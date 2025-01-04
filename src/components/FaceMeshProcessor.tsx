@@ -28,10 +28,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    // Only clear the canvas when drawing new points
-    if (results.multiFaceLandmarks.length > 0) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    // Clear canvas only when we have new landmarks
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
     
@@ -40,25 +38,26 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    console.log('Average EAR:', avgEAR); // Debug log
+    console.log('Average EAR:', avgEAR, 'Threshold:', BLINK_THRESHOLD); // Debug log
 
-    // Detect blink with adjusted logic
+    // Detect blink
     if (avgEAR < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
-      console.log('Blink detected!'); // Debug log
+      console.log('Blink detected! EAR:', avgEAR); // Debug log
       lastEyeStateRef.current = 'closed';
       onBlink();
     } else if (avgEAR >= BLINK_THRESHOLD && lastEyeStateRef.current === 'closed') {
       lastEyeStateRef.current = 'open';
-      console.log('Eyes opened'); // Debug log
+      console.log('Eyes opened. EAR:', avgEAR); // Debug log
     }
 
-    // Draw facial landmarks
+    // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
+      const point = landmarks[index];
       ctx.beginPath();
       ctx.arc(
-        landmarks[index].x * canvas.width,
-        landmarks[index].y * canvas.height,
+        point.x * canvas.width,
+        point.y * canvas.height,
         2,
         0,
         2 * Math.PI

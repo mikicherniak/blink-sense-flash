@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,6 +26,10 @@
 
     --radius: 0.5rem;
   }
+
+  body {
+    @apply bg-background text-foreground font-['Montserrat'];
+  }
 }
 
 @layer utilities {
@@ -35,11 +41,5 @@
     0% { background-color: transparent; }
     50% { background-color: rgba(255, 255, 255, 0.9); }
     100% { background-color: transparent; }
-  }
-}
-
-@layer base {
-  body {
-    @apply bg-background text-foreground;
   }
 }

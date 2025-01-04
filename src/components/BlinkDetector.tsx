@@ -50,6 +50,68 @@ export const BlinkDetector = () => {
     }
   };
 
+  const drawFaceLandmarks = async () => {
+    if (!videoRef.current || !canvasRef.current || !modelsLoadedRef.current) {
+      console.log('Video, canvas, or models not ready');
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const displaySize = { 
+      width: videoRef.current.videoWidth, 
+      height: videoRef.current.videoHeight 
+    };
+
+    // Match canvas size to video size
+    if (canvas.width !== displaySize.width || canvas.height !== displaySize.height) {
+      faceapi.matchDimensions(canvas, displaySize);
+    }
+
+    const detection = await faceapi
+      .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks();
+
+    if (detection) {
+      console.log('Face detected!');
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Clear previous drawings
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the detection results
+        const resizedDetection = faceapi.resizeResults(detection, displaySize);
+        
+        // Draw face landmarks
+        faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
+        
+        // Specifically highlight the eyes
+        const landmarks = resizedDetection.landmarks;
+        const leftEye = landmarks.getLeftEye();
+        const rightEye = landmarks.getRightEye();
+        
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        
+        // Draw circles around eyes
+        ctx.beginPath();
+        ctx.arc(leftEye[0].x, leftEye[0].y, 3, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(rightEye[0].x, rightEye[0].y, 3, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    } else {
+      console.log('No face detected');
+      // Clear canvas when no face is detected
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    requestAnimationFrame(drawFaceLandmarks);
+  };
+
   useEffect(() => {
     loadModels();
     setupCamera();
@@ -67,62 +129,12 @@ export const BlinkDetector = () => {
     
     return () => {
       clearInterval(blinkInterval);
-      // Cleanup camera stream
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
       }
     };
   }, [blinkCount]);
-
-  const getEyeAspectRatio = (eyePoints: any[]) => {
-    const height1 = Math.hypot(
-      eyePoints[1].x - eyePoints[5].x,
-      eyePoints[1].y - eyePoints[5].y
-    );
-    const height2 = Math.hypot(
-      eyePoints[2].x - eyePoints[4].x,
-      eyePoints[2].y - eyePoints[4].y
-    );
-    const width = Math.hypot(
-      eyePoints[0].x - eyePoints[3].x,
-      eyePoints[0].y - eyePoints[3].y
-    );
-    return (height1 + height2) / (2 * width);
-  };
-
-  const detectBlinks = async () => {
-    if (!videoRef.current || !modelsLoadedRef.current) {
-      console.log('Video or models not ready');
-      return;
-    }
-
-    const detection = await faceapi
-      .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks();
-
-    if (detection) {
-      const leftEye = detection.landmarks.getLeftEye();
-      const rightEye = detection.landmarks.getRightEye();
-      
-      const leftEyeAspectRatio = getEyeAspectRatio(leftEye);
-      const rightEyeAspectRatio = getEyeAspectRatio(rightEye);
-      
-      const averageEyeAspectRatio = (leftEyeAspectRatio + rightEyeAspectRatio) / 2;
-      console.log('Eye aspect ratio:', averageEyeAspectRatio);
-      
-      if (averageEyeAspectRatio < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
-        lastEyeStateRef.current = 'closed';
-        setBlinkCount(prev => prev + 1);
-        setLastBlinkTime(Date.now());
-        console.log('Blink detected!');
-      } else if (averageEyeAspectRatio >= BLINK_THRESHOLD) {
-        lastEyeStateRef.current = 'open';
-      }
-    }
-
-    requestAnimationFrame(detectBlinks);
-  };
 
   const triggerBlinkReminder = () => {
     const overlay = document.createElement('div');
@@ -161,7 +173,7 @@ export const BlinkDetector = () => {
           canvasRef={canvasRef}
           onPlay={() => {
             setIsLoading(false);
-            detectBlinks();
+            drawFaceLandmarks();
           }}
           setIsLoading={setIsLoading}
           isLoading={isLoading}

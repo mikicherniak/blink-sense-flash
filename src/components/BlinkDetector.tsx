@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
-import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { VideoDisplay } from './VideoDisplay';
+import { BlinkStats } from './BlinkStats';
 
 const MODELS_PATH = '/models';
 const BLINK_THRESHOLD = 0.5;
@@ -10,15 +10,15 @@ const MIN_BLINKS_PER_MINUTE = 15;
 const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
 export const BlinkDetector = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [blinkCount, setBlinkCount] = useState(0);
   const [blinksPerMinute, setBlinksPerMinute] = useState(0);
+  const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
   const modelsLoadedRef = useRef(false);
-  const { toast } = useToast();
-  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   const loadModels = async () => {
     try {
       await Promise.all([
@@ -29,11 +29,6 @@ export const BlinkDetector = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading models:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load face detection models. Please ensure models are available.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -45,11 +40,6 @@ export const BlinkDetector = () => {
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
-      toast({
-        title: "Error",
-        description: "Failed to access camera. Please ensure camera permissions are granted.",
-        variant: "destructive"
-      });
     }
   };
 
@@ -71,6 +61,22 @@ export const BlinkDetector = () => {
     return () => clearInterval(blinkInterval);
   }, [blinkCount]);
 
+  const getEyeAspectRatio = (eyePoints: any[]) => {
+    const height1 = Math.hypot(
+      eyePoints[1].x - eyePoints[5].x,
+      eyePoints[1].y - eyePoints[5].y
+    );
+    const height2 = Math.hypot(
+      eyePoints[2].x - eyePoints[4].x,
+      eyePoints[2].y - eyePoints[4].y
+    );
+    const width = Math.hypot(
+      eyePoints[0].x - eyePoints[3].x,
+      eyePoints[0].y - eyePoints[3].y
+    );
+    return (height1 + height2) / (2 * width);
+  };
+
   const detectBlinks = async () => {
     if (!videoRef.current || !canvasRef.current || !modelsLoadedRef.current) return;
 
@@ -90,28 +96,14 @@ export const BlinkDetector = () => {
       if (averageEyeAspectRatio < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
         lastEyeStateRef.current = 'closed';
         setBlinkCount(prev => prev + 1);
+        setLastBlinkTime(Date.now());
+        console.log('Blink detected!'); // Debug log
       } else if (averageEyeAspectRatio >= BLINK_THRESHOLD) {
         lastEyeStateRef.current = 'open';
       }
     }
 
     requestAnimationFrame(detectBlinks);
-  };
-
-  const getEyeAspectRatio = (eyePoints: any[]) => {
-    const height1 = Math.hypot(
-      eyePoints[1].x - eyePoints[5].x,
-      eyePoints[1].y - eyePoints[5].y
-    );
-    const height2 = Math.hypot(
-      eyePoints[2].x - eyePoints[4].x,
-      eyePoints[2].y - eyePoints[4].y
-    );
-    const width = Math.hypot(
-      eyePoints[0].x - eyePoints[3].x,
-      eyePoints[0].y - eyePoints[3].y
-    );
-    return (height1 + height2) / (2 * width);
   };
 
   const triggerBlinkReminder = () => {
@@ -146,36 +138,22 @@ export const BlinkDetector = () => {
       <Card className="w-full max-w-2xl p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-center text-primary">Blink Monitor</h2>
         
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p>Loading face detection models...</p>
-            </div>
-          )}
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            onPlay={() => {
-              setIsLoading(false);
-              detectBlinks();
-            }}
-            className="w-full h-full object-cover"
-          />
-          <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span>Blinks per minute</span>
-            <span className="font-semibold">{blinksPerMinute}</span>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p>Loading face detection models...</p>
           </div>
-          <Progress value={(blinksPerMinute / MIN_BLINKS_PER_MINUTE) * 100} />
-          <p className="text-sm text-muted-foreground text-center">
-            Recommended: {MIN_BLINKS_PER_MINUTE} blinks per minute
-          </p>
-        </div>
+        )}
+        
+        <VideoDisplay 
+          onPlay={detectBlinks}
+          setIsLoading={setIsLoading}
+        />
+        
+        <BlinkStats 
+          blinksPerMinute={blinksPerMinute}
+          minBlinksPerMinute={MIN_BLINKS_PER_MINUTE}
+          lastBlinkTime={lastBlinkTime}
+        />
       </Card>
     </div>
   );

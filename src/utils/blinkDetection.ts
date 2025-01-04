@@ -1,4 +1,4 @@
-export const BLINK_THRESHOLD = 0.7; // Testing with a lower threshold
+export const BLINK_THRESHOLD = 0.4; // Testing with an even lower threshold
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 

@@ -20,13 +20,13 @@ export const BlinkDetector = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const faceMeshRef = useRef<any>(null);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
+  const blinkCountRef = useRef(0); // Add this ref to track blinks between intervals
 
   const handleBlink = () => {
-    setBlinkCount(prev => {
-      console.log('Incrementing blink count from:', prev);
-      return prev + 1;
-    });
+    blinkCountRef.current += 1;
+    setBlinkCount(prev => prev + 1);
     setLastBlinkTime(Date.now());
+    console.log('Blink counted! Current count:', blinkCountRef.current);
   };
 
   const setupFaceMesh = async () => {
@@ -83,12 +83,12 @@ export const BlinkDetector = () => {
     init();
 
     const blinkInterval = setInterval(() => {
-      console.log('Minute interval - Current blink count:', blinkCount);
-      setBlinksPerMinute(blinkCount);
-      if (blinkCount < MIN_BLINKS_PER_MINUTE) {
+      console.log('Minute interval - Current blink count:', blinkCountRef.current);
+      setBlinksPerMinute(blinkCountRef.current);
+      if (blinkCountRef.current < MIN_BLINKS_PER_MINUTE) {
         triggerBlinkReminder();
       }
-      setBlinkCount(0);
+      blinkCountRef.current = 0; // Reset the count for the next interval
     }, MEASUREMENT_PERIOD);
 
     return () => {
@@ -98,7 +98,7 @@ export const BlinkDetector = () => {
         tracks.forEach(track => track.stop());
       }
     };
-  }, [blinkCount]);
+  }, []); // Remove blinkCount from dependencies
 
   return (
     <div className="flex flex-col items-center space-y-6 p-6">

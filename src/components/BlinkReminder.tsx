@@ -1,18 +1,24 @@
 export const triggerBlinkReminder = () => {
-  // Remove any existing overlay
-  const existingOverlay = document.querySelector('.flash-overlay');
-  if (existingOverlay) {
-    return; // Don't create multiple overlays
+  // Remove any existing overlay or text
+  const existing = document.querySelector('.blink-reminder');
+  if (existing) {
+    return;
   }
 
   const overlay = document.createElement('div');
-  overlay.className = 'flash-overlay';
+  overlay.className = 'blink-reminder fixed inset-0 flex items-center justify-center z-[9999]';
+  
+  const text = document.createElement('div');
+  text.className = 'text-[15rem] font-black text-neutral-900/30 animate-in fade-in-0 duration-75 fade-out-0';
+  text.textContent = 'BLINK';
+  
+  overlay.appendChild(text);
   document.body.appendChild(overlay);
   
-  // Remove the overlay after animation completes
+  // Remove the text after animation
   setTimeout(() => {
     if (overlay.parentNode) {
       document.body.removeChild(overlay);
     }
-  }, 200);
+  }, 1000);
 };

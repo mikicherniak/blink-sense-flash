@@ -29,7 +29,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    // Clear canvas only when we have new landmarks
+    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
@@ -39,7 +39,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    // Add hysteresis to prevent rapid state changes
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
     const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
@@ -56,7 +55,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks for debugging
+    // Draw facial landmarks using actual pixel coordinates
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
@@ -64,7 +63,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.arc(
         point.x * canvas.width,
         point.y * canvas.height,
-        2,
+        3, // Slightly larger points for better visibility
         0,
         2 * Math.PI
       );

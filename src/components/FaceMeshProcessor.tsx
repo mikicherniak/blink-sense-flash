@@ -19,7 +19,16 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    
+    // Get the canvas context
     canvasContextRef.current = canvasRef.current.getContext('2d');
+    
+    // Set canvas size to match video dimensions
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      canvasRef.current.width = videoElement.clientWidth;
+      canvasRef.current.height = videoElement.clientHeight;
+    }
   }, [canvasRef]);
 
   useEffect(() => {
@@ -29,7 +38,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    // Clear canvas only when we have new landmarks
+    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
@@ -60,16 +69,36 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
+      const x = point.x * canvas.width;
+      const y = point.y * canvas.height;
+      
       ctx.beginPath();
-      ctx.arc(
-        point.x * canvas.width,
-        point.y * canvas.height,
-        2,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(x, y, 3, 0, 2 * Math.PI);
       ctx.fill();
     });
+
+    // Draw lines connecting the eye landmarks
+    const drawEyeOutline = (indices: number[]) => {
+      ctx.beginPath();
+      indices.forEach((index, i) => {
+        const point = landmarks[index];
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
+        
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.closePath();
+      ctx.strokeStyle = '#00FF00';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    };
+
+    drawEyeOutline(LEFT_EYE);
+    drawEyeOutline(RIGHT_EYE);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

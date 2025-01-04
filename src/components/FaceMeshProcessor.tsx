@@ -123,7 +123,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = (1 - point.x) * canvas.width;
+      const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
       const y = point.y * canvas.height;
       
       ctx.beginPath();
@@ -140,7 +140,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = (1 - point.x) * canvas.width;
+        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
         const y = point.y * canvas.height;
         
         if (i === 0) ctx.moveTo(x, y);
@@ -150,7 +150,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = (1 - point.x) * canvas.width;
+        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
         const y = point.y * canvas.height;
         ctx.lineTo(x, y);
       });

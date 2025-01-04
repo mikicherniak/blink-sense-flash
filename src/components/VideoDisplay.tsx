@@ -10,7 +10,7 @@ interface VideoDisplayProps {
 
 export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoading }: VideoDisplayProps) => {
   return (
-    <div className="relative w-full h-screen">
+    <div className="fixed inset-0 -z-10">
       <video
         ref={videoRef}
         autoPlay

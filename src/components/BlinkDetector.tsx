@@ -8,6 +8,7 @@ import { createFaceMesh } from '@/utils/faceMeshSetup';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { MIN_BLINKS_PER_MINUTE, MEASUREMENT_PERIOD } from '@/utils/blinkDetection';
 import { triggerBlinkReminder } from './BlinkReminder';
+import { toast } from 'sonner';
 
 export const BlinkDetector = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +17,7 @@ export const BlinkDetector = () => {
   const [faceMeshResults, setFaceMeshResults] = useState<any>(null);
   const [monitoringStartTime] = useState(Date.now());
   const [totalBlinks, setTotalBlinks] = useState(0);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -46,7 +48,6 @@ export const BlinkDetector = () => {
     const now = Date.now();
     const monitoringDuration = now - monitoringStartTime;
     
-    // Only check blink rate after the first minute
     if (monitoringDuration < 60000) {
       return;
     }
@@ -78,7 +79,10 @@ export const BlinkDetector = () => {
     try {
       await tf.setBackend('webgl');
       await tf.ready();
+      console.log('TensorFlow backend ready:', tf.getBackend());
+      
       faceMeshRef.current = await createFaceMesh();
+      console.log('FaceMesh created successfully');
       
       if (faceMeshRef.current) {
         faceMeshRef.current.onResults((results: any) => {
@@ -87,36 +91,51 @@ export const BlinkDetector = () => {
       }
     } catch (error) {
       console.error('Error setting up FaceMesh:', error);
+      setCameraError('Failed to initialize face detection');
       setIsLoading(false);
     }
   };
 
   const setupCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      const constraints = {
+        video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
-          facingMode: 'user'
-        } 
-      });
+          facingMode: 'user',
+          frameRate: { ideal: 30 }
+        }
+      };
+
+      console.log('Requesting camera with constraints:', constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('Camera stream obtained successfully');
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.playsInline = true; // Important for iOS
+        await videoRef.current.play();
+        console.log('Video element playing');
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
+      setCameraError('Unable to access camera. Please ensure camera permissions are granted.');
+      setIsLoading(false);
+      toast.error('Camera access failed. Please check permissions.');
     }
   };
 
   const processVideo = async () => {
     if (!videoRef.current || !faceMeshRef.current) return;
     
-    if (videoRef.current.videoWidth > 0) {
-      await faceMeshRef.current.send({ image: videoRef.current });
+    try {
+      if (videoRef.current.videoWidth > 0) {
+        await faceMeshRef.current.send({ image: videoRef.current });
+      }
+      requestAnimationFrame(processVideo);
+    } catch (error) {
+      console.error('Error processing video frame:', error);
     }
-    
-    requestAnimationFrame(processVideo);
   };
 
   useEffect(() => {
@@ -137,13 +156,17 @@ export const BlinkDetector = () => {
   }, []);
 
   useEffect(() => {
-    // Check blink rate every 10 seconds after the first minute
     const checkInterval = setInterval(checkBlinkRate, 10000);
     return () => clearInterval(checkInterval);
   }, [blinksInLastMinute]);
 
   return (
     <div className="flex flex-col items-center w-full h-full">
+      {cameraError && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg">
+          {cameraError}
+        </div>
+      )}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
         <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-muted/40">
           <h1 className="text-6xl font-extrabold text-neutral-800">Blin<span className="font-black">X</span></h1>

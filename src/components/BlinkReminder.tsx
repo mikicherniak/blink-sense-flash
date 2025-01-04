@@ -1,7 +1,12 @@
-import React from 'react';
-
 export const triggerBlinkReminder = () => {
+  // Remove any existing overlay
+  const existingOverlay = document.querySelector('.blink-reminder-overlay');
+  if (existingOverlay) {
+    return; // Don't create multiple overlays
+  }
+
   const overlay = document.createElement('div');
+  overlay.className = 'blink-reminder-overlay';
   overlay.style.position = 'fixed';
   overlay.style.inset = '0';
   overlay.style.backgroundColor = 'white';
@@ -22,7 +27,9 @@ export const triggerBlinkReminder = () => {
   document.body.appendChild(overlay);
   
   setTimeout(() => {
-    document.body.removeChild(overlay);
-    document.head.removeChild(style);
+    if (overlay.parentNode) {
+      document.body.removeChild(overlay);
+      document.head.removeChild(style);
+    }
   }, 200);
 };

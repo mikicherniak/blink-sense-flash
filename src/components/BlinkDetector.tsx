@@ -11,8 +11,7 @@ import { triggerBlinkReminder } from './BlinkReminder';
 
 export const BlinkDetector = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [blinkCount, setBlinkCount] = useState(0);
-  const [blinksPerMinute, setBlinksPerMinute] = useState(0);
+  const [blinksInLastMinute, setBlinksInLastMinute] = useState<number[]>([]);
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const [faceMeshResults, setFaceMeshResults] = useState<any>(null);
   
@@ -20,14 +19,39 @@ export const BlinkDetector = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const faceMeshRef = useRef<any>(null);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
-  const blinkCountRef = useRef(0); // Add this ref to track blinks between intervals
+  const lastCheckTime = useRef(Date.now());
+
+  const getCurrentBlinksPerMinute = () => {
+    const now = Date.now();
+    const oneMinuteAgo = now - 60000;
+    const recentBlinks = blinksInLastMinute.filter(time => time > oneMinuteAgo);
+    return recentBlinks.length;
+  };
+
+  const checkBlinkRate = () => {
+    const currentRate = getCurrentBlinksPerMinute();
+    if (currentRate < MIN_BLINKS_PER_MINUTE) {
+      triggerBlinkReminder();
+    }
+  };
 
   const handleBlink = () => {
-    blinkCountRef.current += 1;
-    setBlinkCount(prev => prev + 1);
-    setLastBlinkTime(Date.now());
-    console.log('Blink counted! Current count:', blinkCountRef.current);
+    const now = Date.now();
+    setBlinksInLastMinute(prev => [...prev, now]);
+    setLastBlinkTime(now);
+    checkBlinkRate();
   };
+
+  // Clean up old blink timestamps periodically
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      const oneMinuteAgo = now - 60000;
+      setBlinksInLastMinute(prev => prev.filter(time => time > oneMinuteAgo));
+    }, 1000);
+
+    return () => clearInterval(cleanup);
+  }, []);
 
   const setupFaceMesh = async () => {
     try {
@@ -82,28 +106,29 @@ export const BlinkDetector = () => {
     
     init();
 
-    const blinkInterval = setInterval(() => {
-      console.log('Minute interval - Current blink count:', blinkCountRef.current);
-      setBlinksPerMinute(blinkCountRef.current);
-      if (blinkCountRef.current < MIN_BLINKS_PER_MINUTE) {
-        triggerBlinkReminder();
-      }
-      blinkCountRef.current = 0; // Reset the count for the next interval
-    }, MEASUREMENT_PERIOD);
-
     return () => {
-      clearInterval(blinkInterval);
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
       }
     };
-  }, []); // Remove blinkCount from dependencies
+  }, []);
+
+  // Check blink rate every second
+  useEffect(() => {
+    const checkInterval = setInterval(checkBlinkRate, 1000);
+    return () => clearInterval(checkInterval);
+  }, [blinksInLastMinute]);
 
   return (
     <div className="flex flex-col items-center space-y-6 p-6">
       <Card className="w-full max-w-2xl p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-center text-primary">Blink Monitor</h2>
+        
+        <div className="absolute top-4 right-4 bg-primary/10 rounded-lg p-3">
+          <span className="text-lg font-bold">{getCurrentBlinksPerMinute()}</span>
+          <span className="text-sm ml-2">blinks/min</span>
+        </div>
         
         <VideoDisplay 
           videoRef={videoRef}
@@ -123,12 +148,6 @@ export const BlinkDetector = () => {
             lastEyeStateRef={lastEyeStateRef}
           />
         )}
-        
-        <BlinkStats 
-          blinksPerMinute={blinksPerMinute}
-          minBlinksPerMinute={MIN_BLINKS_PER_MINUTE}
-          lastBlinkTime={lastBlinkTime}
-        />
       </Card>
     </div>
   );

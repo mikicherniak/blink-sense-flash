@@ -14,6 +14,7 @@ export const BlinkDetector = () => {
   const [blinksInLastMinute, setBlinksInLastMinute] = useState<number[]>([]);
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const [faceMeshResults, setFaceMeshResults] = useState<any>(null);
+  const [monitoringStartTime] = useState(Date.now());
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -29,6 +30,14 @@ export const BlinkDetector = () => {
   };
 
   const checkBlinkRate = () => {
+    const now = Date.now();
+    const monitoringDuration = now - monitoringStartTime;
+    
+    // Only check blink rate after the first minute
+    if (monitoringDuration < 60000) {
+      return;
+    }
+    
     const currentRate = getCurrentBlinksPerMinute();
     if (currentRate < MIN_BLINKS_PER_MINUTE) {
       triggerBlinkReminder();
@@ -39,7 +48,6 @@ export const BlinkDetector = () => {
     const now = Date.now();
     setBlinksInLastMinute(prev => [...prev, now]);
     setLastBlinkTime(now);
-    checkBlinkRate();
   };
 
   useEffect(() => {

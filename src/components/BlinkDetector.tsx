@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaceMesh } from '@mediapipe/face_mesh';
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import { Card } from '@/components/ui/card';
 import { VideoDisplay } from './VideoDisplay';
 import { BlinkStats } from './BlinkStats';
+import { createFaceMesh } from '@/utils/faceMeshSetup';
 
 const MIN_BLINKS_PER_MINUTE = 15;
 const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
@@ -19,7 +19,7 @@ export const BlinkDetector = () => {
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const faceMeshRef = useRef<FaceMesh | null>(null);
+  const faceMeshRef = useRef<any>(null);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
 
   const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
@@ -79,22 +79,13 @@ export const BlinkDetector = () => {
   };
 
   const setupFaceMesh = async () => {
-    await tf.setBackend('webgl');
-    
-    faceMeshRef.current = new FaceMesh({
-      locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
-      }
-    });
-
-    faceMeshRef.current.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-
-    faceMeshRef.current.onResults(onResults);
+    try {
+      await tf.setBackend('webgl');
+      faceMeshRef.current = await createFaceMesh();
+      faceMeshRef.current.onResults(onResults);
+    } catch (error) {
+      console.error('Error setting up FaceMesh:', error);
+    }
   };
 
   const setupCamera = async () => {

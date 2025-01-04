@@ -42,7 +42,6 @@ export const BlinkDetector = () => {
     checkBlinkRate();
   };
 
-  // Clean up old blink timestamps periodically
   useEffect(() => {
     const cleanup = setInterval(() => {
       const now = Date.now();
@@ -77,8 +76,8 @@ export const BlinkDetector = () => {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: 'user',
-          // Basic constraints for better face detection
-          exposureMode: 'continuous',
+          // Using standard MediaTrackConstraints properties
+          autoExposureMode: 'continuous',
           focusMode: 'continuous',
           whiteBalanceMode: 'continuous'
         } 
@@ -119,7 +118,6 @@ export const BlinkDetector = () => {
     };
   }, []);
 
-  // Check blink rate every second
   useEffect(() => {
     const checkInterval = setInterval(checkBlinkRate, 1000);
     return () => clearInterval(checkInterval);

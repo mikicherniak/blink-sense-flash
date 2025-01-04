@@ -145,20 +145,20 @@ export const BlinkDetector = () => {
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-muted">
+        <div className="bg-background/40 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-muted/50">
           <h1 className="text-6xl font-extrabold text-foreground">BlinX</h1>
         </div>
       </div>
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-10 w-full max-w-4xl px-8">
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted">
+        <div className="bg-background/40 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/50">
           <span className="text-sm text-muted-foreground">Current BPM</span>
           <div className="text-2xl font-bold text-foreground">{getCurrentBlinksPerMinute()}</div>
         </div>
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted">
+        <div className="bg-background/40 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/50">
           <span className="text-sm text-muted-foreground">Average BPM</span>
           <div className="text-2xl font-bold text-foreground">{getAverageBlinksPerMinute()}</div>
         </div>
-        <div className="bg-background/80 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted">
+        <div className="bg-background/40 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/50">
           <span className="text-sm text-muted-foreground">Session Duration</span>
           <div className="text-2xl font-bold text-foreground">{getSessionDuration()}</div>
         </div>

@@ -34,12 +34,16 @@
 
 @layer utilities {
   .flash-overlay {
-    animation: flash 0.2s ease-out;
+    position: fixed;
+    inset: 0;
+    background-color: white;
+    z-index: 9999;
+    animation: flash 0.2s ease-out forwards;
   }
 
   @keyframes flash {
-    0% { background-color: transparent; }
-    50% { background-color: rgba(255, 255, 255, 0.9); }
-    100% { background-color: transparent; }
+    0% { opacity: 0; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0; }
   }
 }

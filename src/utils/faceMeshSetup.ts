@@ -12,22 +12,29 @@ export const createFaceMesh = async () => {
 
     return {
       send: async ({ image }: { image: HTMLVideoElement }) => {
-        const detections = await faceapi
-          .detectSingleFace(image, new faceapi.TinyFaceDetectorOptions())
-          .withFaceLandmarks();
+        try {
+          const detections = await faceapi
+            .detectSingleFace(image, new faceapi.TinyFaceDetectorOptions())
+            .withFaceLandmarks();
 
-        if (detections) {
-          return {
-            multiFaceLandmarks: [
-              detections.landmarks.positions.map(point => ({
-                x: point.x / image.width,
-                y: point.y / image.height,
-                z: 0
-              }))
-            ]
-          };
+          if (detections) {
+            console.log('Face detected:', detections.landmarks.positions.length, 'landmarks');
+            return {
+              multiFaceLandmarks: [
+                detections.landmarks.positions.map(point => ({
+                  x: point.x / image.videoWidth,
+                  y: point.y / image.videoHeight,
+                  z: 0
+                }))
+              ]
+            };
+          }
+          console.log('No face detected');
+          return { multiFaceLandmarks: [] };
+        } catch (error) {
+          console.error('Error processing face:', error);
+          return { multiFaceLandmarks: [] };
         }
-        return { multiFaceLandmarks: [] };
       },
       onResults: (callback: (results: any) => void) => {
         return callback;

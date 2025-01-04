@@ -38,16 +38,17 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    console.log('Average EAR:', avgEAR, 'Threshold:', BLINK_THRESHOLD); // Debug log
+    console.log('Current eye state:', lastEyeStateRef.current);
+    console.log('Average EAR:', avgEAR, 'Threshold:', BLINK_THRESHOLD);
 
     // Detect blink
     if (avgEAR < BLINK_THRESHOLD && lastEyeStateRef.current === 'open') {
-      console.log('Blink detected! EAR:', avgEAR); // Debug log
+      console.log('BLINK DETECTED! EAR:', avgEAR);
       lastEyeStateRef.current = 'closed';
       onBlink();
     } else if (avgEAR >= BLINK_THRESHOLD && lastEyeStateRef.current === 'closed') {
+      console.log('Eyes reopened. EAR:', avgEAR);
       lastEyeStateRef.current = 'open';
-      console.log('Eyes opened. EAR:', avgEAR); // Debug log
     }
 
     // Draw facial landmarks for debugging

@@ -10,20 +10,20 @@ export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 // These indices are for the main eye landmarks in MediaPipe's 468-point model
 export const LEFT_EYE = [
   362, // left-most point
-  374, // top point
+  386, // top point
   263, // right-most point
-  386, // bottom point
+  374, // bottom point
   373, // bottom-left point
   390  // bottom-right point
 ];
 
 export const RIGHT_EYE = [
-  33,  // left-most point
-  159, // top point
-  133, // right-most point
-  145, // bottom point
+  133, // left-most point
+  158, // top point
+  33,  // right-most point
+  153, // bottom point
   144, // bottom-left point
-  153  // bottom-right point
+  145  // bottom-right point
 ];
 
 interface Point {

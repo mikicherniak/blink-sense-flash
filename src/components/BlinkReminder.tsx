@@ -6,10 +6,10 @@ export const triggerBlinkReminder = () => {
   }
 
   const overlay = document.createElement('div');
-  overlay.className = 'blink-reminder fixed inset-0 flex items-center justify-center z-[9999]';
+  overlay.className = 'blink-reminder fixed inset-0 flex items-center justify-center z-[99999] bg-black/10';
   
   const text = document.createElement('div');
-  text.className = 'text-[15rem] font-black text-neutral-900/30 animate-in fade-in-0 duration-75 fade-out-0';
+  text.className = 'text-[15rem] font-black text-neutral-900/70 animate-in fade-in-0 duration-75 fade-out-0';
   text.textContent = 'BLINK';
   
   overlay.appendChild(text);

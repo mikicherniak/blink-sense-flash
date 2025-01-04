@@ -145,7 +145,7 @@ export const BlinkDetector = () => {
   return (
     <div className="flex flex-col items-center w-full h-full">
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-4">
+        <div className="bg-primary/10 backdrop-blur-sm rounded-lg p-4 flex justify-center">
           <h1 className="text-6xl font-extrabold text-white">BlinX</h1>
         </div>
       </div>

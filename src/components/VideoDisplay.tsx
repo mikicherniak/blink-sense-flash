@@ -39,18 +39,18 @@ export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoad
   }, [videoRef, canvasRef]);
 
   return (
-    <div ref={containerRef} className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+    <div ref={containerRef} className="relative w-full aspect-video rounded-lg overflow-hidden">
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
         onPlay={onPlay}
-        className="w-full h-full object-contain"
+        className="absolute inset-0 w-full h-full object-contain"
       />
       <canvas 
         ref={canvasRef} 
-        className="absolute top-0 left-0 w-full h-full"
+        className="absolute inset-0 w-full h-full pointer-events-none"
         style={{ objectFit: 'contain' }}
       />
       {isLoading && (

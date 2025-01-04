@@ -128,34 +128,30 @@ export const BlinkDetector = () => {
   }, [blinksInLastMinute]);
 
   return (
-    <div className="flex flex-col items-center space-y-6 p-6">
-      <Card className="w-full max-w-2xl p-6 space-y-4">
-        <h2 className="text-2xl font-semibold text-center text-primary">Blink Monitor</h2>
-        
-        <div className="absolute top-4 right-4 bg-primary/10 rounded-lg p-3">
-          <span className="text-lg font-bold">{getCurrentBlinksPerMinute()}</span>
-          <span className="text-sm ml-2">blinks/min</span>
-        </div>
-        
-        <VideoDisplay 
-          videoRef={videoRef}
+    <div className="flex flex-col items-center w-full h-full">
+      <div className="absolute top-4 right-4 bg-primary/10 rounded-lg p-3 z-10">
+        <span className="text-lg font-bold">{getCurrentBlinksPerMinute()}</span>
+        <span className="text-sm ml-2">blinks/min</span>
+      </div>
+      
+      <VideoDisplay 
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        onPlay={() => {
+          processVideo();
+        }}
+        setIsLoading={setIsLoading}
+        isLoading={isLoading}
+      />
+      
+      {faceMeshResults && (
+        <FaceMeshProcessor
+          results={faceMeshResults}
           canvasRef={canvasRef}
-          onPlay={() => {
-            processVideo();
-          }}
-          setIsLoading={setIsLoading}
-          isLoading={isLoading}
+          onBlink={handleBlink}
+          lastEyeStateRef={lastEyeStateRef}
         />
-        
-        {faceMeshResults && (
-          <FaceMeshProcessor
-            results={faceMeshResults}
-            canvasRef={canvasRef}
-            onBlink={handleBlink}
-            lastEyeStateRef={lastEyeStateRef}
-          />
-        )}
-      </Card>
+      )}
     </div>
   );
 };

@@ -10,7 +10,7 @@ interface VideoDisplayProps {
 
 export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoading }: VideoDisplayProps) => {
   return (
-    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+    <div className="relative w-full h-screen">
       <video
         ref={videoRef}
         autoPlay
@@ -22,7 +22,7 @@ export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoad
       <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
-          <p>Loading face detection models...</p>
+          Loading...
         </div>
       )}
     </div>

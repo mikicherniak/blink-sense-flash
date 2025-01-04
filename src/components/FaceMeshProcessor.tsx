@@ -16,6 +16,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 }) => {
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const lastEARRef = useRef<number>(1);
+  const logIntervalRef = useRef<number>(0);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -84,16 +85,35 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
+    // Log EAR values every 100ms to avoid console spam
+    logIntervalRef.current++;
+    if (logIntervalRef.current % 3 === 0) {
+      console.log('Current EAR:', {
+        left: leftEAR.toFixed(3),
+        right: rightEAR.toFixed(3),
+        average: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD
+      });
+    }
+
     // Add hysteresis to prevent rapid state changes
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
     const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
     if (isClosing && lastEyeStateRef.current === 'open') {
-      console.log('BLINK DETECTED! EAR:', avgEAR.toFixed(3));
+      console.log('🔍 BLINK DETECTED!', {
+        EAR: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD,
+        previousEAR: lastEARRef.current.toFixed(3)
+      });
       lastEyeStateRef.current = 'closed';
       onBlink();
     } else if (isOpening && lastEyeStateRef.current === 'closed') {
-      console.log('Eyes reopened. EAR:', avgEAR.toFixed(3));
+      console.log('👁 Eyes reopened', {
+        EAR: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD,
+        previousEAR: lastEARRef.current.toFixed(3)
+      });
       lastEyeStateRef.current = 'open';
     }
 
@@ -103,7 +123,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = point.x * canvas.width;
+      const x = (1 - point.x) * canvas.width;
       const y = point.y * canvas.height;
       
       ctx.beginPath();
@@ -120,7 +140,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = point.x * canvas.width;
+        const x = (1 - point.x) * canvas.width;
         const y = point.y * canvas.height;
         
         if (i === 0) ctx.moveTo(x, y);
@@ -130,7 +150,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = point.x * canvas.width;
+        const x = (1 - point.x) * canvas.width;
         const y = point.y * canvas.height;
         ctx.lineTo(x, y);
       });

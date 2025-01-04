@@ -21,6 +21,7 @@ export const BlinkDetector = () => {
 
   const loadModels = async () => {
     try {
+      console.log('Starting to load models from:', MODELS_PATH);
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH)
@@ -65,48 +66,52 @@ export const BlinkDetector = () => {
     // Match canvas size to video size
     if (canvas.width !== displaySize.width || canvas.height !== displaySize.height) {
       faceapi.matchDimensions(canvas, displaySize);
+      console.log('Canvas dimensions matched:', displaySize);
     }
 
-    const detection = await faceapi
-      .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks();
+    try {
+      const detection = await faceapi
+        .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks();
 
-    if (detection) {
-      console.log('Face detected!');
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Clear previous drawings
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (detection) {
+        console.log('Face detected!', detection);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Clear previous drawings
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw the detection results
-        const resizedDetection = faceapi.resizeResults(detection, displaySize);
-        
-        // Draw face landmarks
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
-        
-        // Specifically highlight the eyes
-        const landmarks = resizedDetection.landmarks;
-        const leftEye = landmarks.getLeftEye();
-        const rightEye = landmarks.getRightEye();
-        
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 2;
-        
-        // Draw circles around eyes
-        ctx.beginPath();
-        ctx.arc(leftEye[0].x, leftEye[0].y, 3, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(rightEye[0].x, rightEye[0].y, 3, 0, 2 * Math.PI);
-        ctx.stroke();
+          // Draw the detection results
+          const resizedDetection = faceapi.resizeResults(detection, displaySize);
+          
+          // Draw face landmarks
+          faceapi.draw.drawFaceLandmarks(canvas, resizedDetection);
+          
+          // Specifically highlight the eyes
+          const landmarks = resizedDetection.landmarks;
+          const leftEye = landmarks.getLeftEye();
+          const rightEye = landmarks.getRightEye();
+          
+          ctx.strokeStyle = '#00ff00';
+          ctx.lineWidth = 2;
+          
+          // Draw circles around eyes
+          ctx.beginPath();
+          ctx.arc(leftEye[0].x, leftEye[0].y, 3, 0, 2 * Math.PI);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(rightEye[0].x, rightEye[0].y, 3, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+      } else {
+        console.log('No face detected in this frame');
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
       }
-    } else {
-      console.log('No face detected');
-      // Clear canvas when no face is detected
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+    } catch (error) {
+      console.error('Error during face detection:', error);
     }
 
     requestAnimationFrame(drawFaceLandmarks);

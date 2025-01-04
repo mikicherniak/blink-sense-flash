@@ -46,7 +46,7 @@ export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoad
         playsInline
         muted
         onPlay={onPlay}
-        className="absolute inset-0 w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full"
       />
       <canvas 
         ref={canvasRef} 

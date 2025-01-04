@@ -4,7 +4,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
-// Update the models path to ensure it's relative to the public directory
 const MODELS_PATH = '/models';
 const BLINK_THRESHOLD = 0.5;
 const MIN_BLINKS_PER_MINUTE = 15;
@@ -17,13 +16,16 @@ export const BlinkDetector = () => {
   const [blinkCount, setBlinkCount] = useState(0);
   const [blinksPerMinute, setBlinksPerMinute] = useState(0);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
+  const modelsLoadedRef = useRef(false);
   const { toast } = useToast();
   
   const loadModels = async () => {
     try {
-      // Load models in sequence and await each one
-      await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH);
-      await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH);
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_PATH),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_PATH)
+      ]);
+      modelsLoadedRef.current = true;
       setIsLoading(false);
     } catch (error) {
       console.error('Error loading models:', error);
@@ -52,7 +54,6 @@ export const BlinkDetector = () => {
   };
 
   useEffect(() => {
-    // Load models first, then setup camera
     loadModels().then(() => {
       setupCamera();
     });
@@ -70,7 +71,7 @@ export const BlinkDetector = () => {
   }, []);
 
   const detectBlinks = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !modelsLoadedRef.current) return;
 
     const detection = await faceapi
       .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())

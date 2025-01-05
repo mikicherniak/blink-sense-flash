@@ -6,8 +6,13 @@ import { BlinkStats } from './BlinkStats';
 import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash } from '@/hooks/useWarningFlash';
+import { useTheme } from '@/hooks/useTheme';
+import { Moon } from 'lucide-react';
+import { Switch } from './ui/switch';
 
 export const BlinkDetector = () => {
+  const { isDark, toggleTheme } = useTheme();
+  
   const {
     blinksInLastMinute,
     setBlinksInLastMinute,
@@ -79,8 +84,18 @@ export const BlinkDetector = () => {
       )}
       
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className="bg-neutral-800/80 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-neutral-700/40">
-          <h1 className="text-6xl font-extrabold text-neutral-100">Blin<span className="font-black">X</span></h1>
+        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 flex justify-between items-center border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
+          <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
+            Blin<span className="font-black">X</span>
+          </h1>
+          <div className="flex items-center gap-2">
+            <Moon className={`w-5 h-5 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
+            <Switch
+              checked={isDark}
+              onCheckedChange={toggleTheme}
+              className="data-[state=checked]:bg-neutral-600"
+            />
+          </div>
         </div>
       </div>
       
@@ -88,6 +103,7 @@ export const BlinkDetector = () => {
         currentBPM={getCurrentBlinksPerMinute()}
         averageBPM={getAverageBlinksPerMinute()}
         sessionDuration={getSessionDuration()}
+        isDark={isDark}
       />
       
       <VideoDisplay 

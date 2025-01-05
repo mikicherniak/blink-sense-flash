@@ -9,6 +9,6 @@ window.addEventListener('message', (event) => {
     overlay.classList.add('active');
     setTimeout(() => {
       overlay.classList.remove('active');
-    }, 200);
+    }, 1000); // Increased duration to match animation
   }
 });

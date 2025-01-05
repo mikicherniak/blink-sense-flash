@@ -17,7 +17,8 @@ export const useBlinkTracking = () => {
   const getAverageBlinksPerMinute = () => {
     const now = Date.now();
     const sessionDurationMinutes = (now - monitoringStartTime) / 60000;
-    return getCurrentBlinksPerMinute();
+    if (sessionDurationMinutes < 0.1) return 0; // Avoid division by very small numbers
+    return Math.round(totalBlinks / sessionDurationMinutes);
   };
 
   const getSessionDuration = () => {

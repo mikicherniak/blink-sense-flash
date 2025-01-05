@@ -30,25 +30,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      // Get the video's natural dimensions
-      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
-      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
-
-      // Get the container dimensions
-      const containerWidth = videoElement.clientWidth;
-      const containerHeight = videoElement.clientHeight;
-
-      // Calculate the scaling factor to maintain aspect ratio
-      const scale = Math.min(
-        containerWidth / videoWidth,
-        containerHeight / videoHeight
-      );
-
-      // Set canvas dimensions to match the scaled video size
-      canvas.width = videoWidth * scale;
-      canvas.height = videoHeight * scale;
-
-      // Update the canvas context
+      canvas.width = videoElement.clientWidth;
+      canvas.height = videoElement.clientHeight;
       canvasContextRef.current = canvas.getContext('2d');
     };
 
@@ -141,41 +124,35 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       }
     });
 
-    // Draw simplified eye outlines with proper connections
-    const drawSimplifiedEyeOutline = (indices: number[]) => {
-      // Validate that all required landmarks exist before drawing
-      // New connection order that follows the natural eye contour
-      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-      const validPoints = connectionOrder.every(i => 
-        indices[i] !== undefined && landmarks[indices[i]] !== undefined
-      );
-
-      if (!validPoints) {
-        console.warn('Invalid landmarks detected, skipping eye outline drawing');
+    // Draw eye outlines
+    const drawEyeOutline = (indices: number[]) => {
+      if (!indices.every(i => landmarks[i])) {
+        console.warn('Missing landmarks for eye outline');
         return;
       }
 
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 1;
-      
-      // Start from the first point
-      const startPoint = landmarks[indices[connectionOrder[0]]];
-      ctx.moveTo(startPoint.x * canvas.width, startPoint.y * canvas.height);
-      
-      // Draw the outline following the connection order
-      for (let i = 1; i < connectionOrder.length; i++) {
-        const point = landmarks[indices[connectionOrder[i]]];
+
+      // Start with the first point
+      const firstPoint = landmarks[indices[0]];
+      ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
+
+      // Connect points in anatomically correct order
+      const anatomicalOrder = [0, 1, 2, 3, 4, 5];
+      anatomicalOrder.forEach(i => {
+        const point = landmarks[indices[i]];
         ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-      }
-      
-      // Close the path by connecting back to the start
+      });
+
+      // Close the path
       ctx.closePath();
       ctx.stroke();
     };
 
-    drawSimplifiedEyeOutline(LEFT_EYE);
-    drawSimplifiedEyeOutline(RIGHT_EYE);
+    drawEyeOutline(LEFT_EYE);
+    drawEyeOutline(RIGHT_EYE);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

@@ -39,10 +39,15 @@ export const useCamera = () => {
     try {
       const constraints = {
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 1920 },  // Increased from 640 to 1920 (1080p width)
+          height: { ideal: 1080 }, // Increased from 480 to 1080 (1080p height)
           facingMode: 'user',
-          frameRate: { ideal: 30 }
+          frameRate: { ideal: 30, max: 60 }, // Added max frameRate option
+          aspectRatio: 16/9,  // Added to maintain proper aspect ratio
+          // Request highest quality available
+          advanced: [
+            { width: { min: 1280 }, height: { min: 720 } } // Fallback to at least 720p
+          ]
         }
       };
 
@@ -53,6 +58,15 @@ export const useCamera = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.playsInline = true;
+        
+        // Log the actual resolution we got
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Actual video resolution:', {
+            width: videoRef.current?.videoWidth,
+            height: videoRef.current?.videoHeight
+          });
+        };
+        
         await videoRef.current.play();
         console.log('Video element playing');
       }

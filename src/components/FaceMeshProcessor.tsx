@@ -138,33 +138,33 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.fill();
     });
 
-    // Draw simplified eye outlines
+    // Draw simplified eye outlines with proper connections
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
-      const upperIndices = indices.slice(0, indices.length / 2);
-      const lowerIndices = indices.slice(indices.length / 2).reverse();
-      
-      // Draw upper lid
-      upperIndices.forEach((index, i) => {
-        const point = landmarks[index];
-        const x = point.x * canvas.width;
-        const y = point.y * canvas.height;
-        
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      
-      // Draw lower lid
-      lowerIndices.forEach((index) => {
-        const point = landmarks[index];
-        const x = point.x * canvas.width;
-        const y = point.y * canvas.height;
-        ctx.lineTo(x, y);
-      });
-      
-      ctx.closePath();
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 1;
+      
+      // Get the midpoint of the eye indices
+      const midpoint = Math.floor(indices.length / 2);
+      
+      // Start from the first point
+      const firstPoint = landmarks[indices[0]];
+      ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
+      
+      // Draw upper lid (from left to right)
+      for (let i = 1; i <= midpoint; i++) {
+        const point = landmarks[indices[i]];
+        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
+      }
+      
+      // Draw lower lid (from right to left)
+      for (let i = indices.length - 1; i > midpoint; i--) {
+        const point = landmarks[indices[i]];
+        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
+      }
+      
+      // Close the path by connecting back to the start
+      ctx.closePath();
       ctx.stroke();
     };
 

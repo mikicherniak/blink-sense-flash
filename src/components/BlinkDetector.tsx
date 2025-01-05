@@ -1,14 +1,12 @@
-import React, { useEffect } from 'react';
+import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
-import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { BlinkStats } from './BlinkStats';
 import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon } from 'lucide-react';
-import { Switch } from './ui/switch';
+import { Moon, Sun } from 'lucide-react';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -88,13 +86,28 @@ export const BlinkDetector = () => {
           <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
             Blin<span className="font-black">X</span>
           </h1>
-          <div className="flex items-center gap-2">
-            <Moon className={`w-5 h-5 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
-            <Switch
-              checked={isDark}
-              onCheckedChange={toggleTheme}
-              className="data-[state=checked]:bg-neutral-600"
-            />
+          <div className="relative flex items-center gap-2">
+            <div className="relative">
+              <div className={`absolute left-0 top-1/2 -translate-y-1/2 ml-0.5 transition-opacity ${isDark ? 'opacity-100' : 'opacity-0'}`}>
+                <Sun className={`w-4 h-4 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
+              </div>
+              <div className={`absolute right-0 top-1/2 -translate-y-1/2 mr-0.5 transition-opacity ${!isDark ? 'opacity-100' : 'opacity-0'}`}>
+                <Moon className={`w-4 h-4 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
+              </div>
+              <div className="w-11 h-6" /> {/* Spacer to maintain layout */}
+            </div>
+            <button
+              onClick={toggleTheme}
+              className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                isDark ? 'bg-neutral-600' : 'bg-neutral-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 transform ${
+                  isDark ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
         </div>
       </div>

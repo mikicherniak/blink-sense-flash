@@ -139,27 +139,22 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     });
 
     // Draw simplified eye outlines with proper connections
+
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 1;
       
-      // Get the midpoint of the eye indices
-      const midpoint = Math.floor(indices.length / 2);
+      // Define the connection order for smoother outline
+      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 14, 13, 12, 11, 10, 9];
       
       // Start from the first point
-      const firstPoint = landmarks[indices[0]];
-      ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
+      const startPoint = landmarks[indices[connectionOrder[0]]];
+      ctx.moveTo(startPoint.x * canvas.width, startPoint.y * canvas.height);
       
-      // Draw upper lid (from left to right)
-      for (let i = 1; i <= midpoint; i++) {
-        const point = landmarks[indices[i]];
-        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-      }
-      
-      // Draw lower lid (from right to left)
-      for (let i = indices.length - 1; i > midpoint; i--) {
-        const point = landmarks[indices[i]];
+      // Draw the outline following the connection order
+      for (let i = 1; i < connectionOrder.length; i++) {
+        const point = landmarks[indices[connectionOrder[i]]];
         ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
       }
       

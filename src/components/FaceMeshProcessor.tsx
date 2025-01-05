@@ -112,7 +112,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const scaleX = canvas.width / videoElement.videoWidth;
     const scaleY = canvas.height / videoElement.videoHeight;
 
-    // Draw facial landmarks for debugging
+    // Draw facial landmarks for debugging with increased size and spacing
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
@@ -120,11 +120,11 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const y = point.y * canvas.height;
       
       ctx.beginPath();
-      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.arc(x, y, 3, 0, 2 * Math.PI); // Increased radius from 2 to 3
       ctx.fill();
     });
 
-    // Draw simplified eye outlines
+    // Draw simplified eye outlines with thicker lines
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       ctx.beginPath();
       const upperIndices = indices.slice(0, indices.length / 2);
@@ -150,7 +150,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       
       ctx.closePath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2; // Increased line width from 1 to 2
       ctx.stroke();
     };
 

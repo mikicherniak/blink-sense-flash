@@ -144,7 +144,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     // Draw simplified eye outlines with proper connections
     const drawSimplifiedEyeOutline = (indices: number[]) => {
       // Validate that all required landmarks exist before drawing
-      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 14, 13, 12, 11, 10, 9];
+      // New connection order that follows the natural eye contour
+      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
       const validPoints = connectionOrder.every(i => 
         indices[i] !== undefined && landmarks[indices[i]] !== undefined
       );

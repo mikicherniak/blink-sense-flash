@@ -119,12 +119,20 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
+    // Get the video element for scaling calculations
+    const videoElement = document.querySelector('video');
+    if (!videoElement) return;
+
+    // Calculate scale factors based on actual video dimensions vs canvas dimensions
+    const scaleX = canvas.width / videoElement.videoWidth;
+    const scaleY = canvas.height / videoElement.videoHeight;
+
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
-      const y = point.y * canvas.height;
+      const x = point.x * videoElement.videoWidth * scaleX;
+      const y = point.y * videoElement.videoHeight * scaleY;
       
       ctx.beginPath();
       ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -140,8 +148,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
-        const y = point.y * canvas.height;
+        const x = point.x * videoElement.videoWidth * scaleX;
+        const y = point.y * videoElement.videoHeight * scaleY;
         
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -150,8 +158,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
-        const y = point.y * canvas.height;
+        const x = point.x * videoElement.videoWidth * scaleX;
+        const y = point.y * videoElement.videoHeight * scaleY;
         ctx.lineTo(x, y);
       });
       

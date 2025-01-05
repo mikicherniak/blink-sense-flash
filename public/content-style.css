@@ -12,14 +12,5 @@
 }
 
 #blinx-overlay.active {
-  opacity: 1;
-  animation: random-flash 1s ease-in-out infinite;
-}
-
-@keyframes random-flash {
-  0% { opacity: 1; }
-  25% { opacity: 0.7; }
-  50% { opacity: 1; }
-  75% { opacity: 0.8; }
-  100% { opacity: 1; }
+  opacity: 0.8;
 }

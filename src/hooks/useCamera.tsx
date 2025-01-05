@@ -36,13 +36,20 @@ export const useCamera = () => {
 
   const setupCamera = async () => {
     try {
+      // Improved camera constraints for better face detection
       const constraints = {
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 1280 }, // Increased resolution
+          height: { ideal: 720 },
           facingMode: 'user',
-          frameRate: { ideal: 60, min: 30 } // Increased from 30 to 60 fps
-        }
+          frameRate: { ideal: 60, min: 30 }, // Higher frame rate
+          // Additional camera settings for better quality
+          brightness: { ideal: 100 },
+          contrast: { ideal: 100 },
+          exposureMode: 'continuous',
+          focusMode: 'continuous',
+          whiteBalanceMode: 'continuous'
+        } as MediaTrackConstraints
       };
 
       console.log('Requesting camera with constraints:', constraints);
@@ -52,6 +59,14 @@ export const useCamera = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.playsInline = true;
+        
+        // Wait for video to be properly initialized
+        await new Promise((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadeddata = resolve;
+          }
+        });
+        
         await videoRef.current.play();
         
         // Log the actual frame rate we got

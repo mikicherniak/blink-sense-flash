@@ -1,8 +1,8 @@
 // According to research papers and MediaPipe documentation, typical EAR values:
 // - Open eyes: ~0.2-0.3
 // - Closed eyes: ~0.05-0.15
-export const BLINK_THRESHOLD = 0.21; // Adjusted to be more sensitive to quick blinks
-export const BLINK_BUFFER = 0.005;   // Keep small buffer for quick state changes
+export const BLINK_THRESHOLD = 0.23; // Increased from 0.21 for better sensitivity
+export const BLINK_BUFFER = 0.02;   // Increased buffer for more stable state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
@@ -40,28 +40,53 @@ const euclideanDistance = (p1: Point, p2: Point) => {
   );
 };
 
+// Added moving average for EAR values to reduce noise
+const EAR_HISTORY_SIZE = 3;
+let earHistory: number[] = [];
+
 export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
-  // Get the eye corner points
-  const corner1 = landmarks[eyeIndices[0]];
-  const corner2 = landmarks[eyeIndices[2]];
-  
-  // Get the top and bottom points
-  const top = landmarks[eyeIndices[1]];
-  const bottom = landmarks[eyeIndices[3]];
-  
-  // Get the additional points for better measurement
-  const p1 = landmarks[eyeIndices[4]];
-  const p2 = landmarks[eyeIndices[5]];
-  
-  // Calculate vertical distances (average of two measurements)
-  const v1 = euclideanDistance(p1, p2);
-  const v2 = euclideanDistance(top, bottom);
-  
-  // Calculate horizontal distance
-  const h = euclideanDistance(corner1, corner2);
-  
-  // Calculate EAR using the formula: EAR = (v1 + v2) / (2 * h)
-  if (h === 0) return 1.0; // Prevent division by zero
-  
-  return (v1 + v2) / (2.0 * h);
+  try {
+    // Get the eye corner points
+    const corner1 = landmarks[eyeIndices[0]];
+    const corner2 = landmarks[eyeIndices[2]];
+    
+    // Get the top and bottom points
+    const top = landmarks[eyeIndices[1]];
+    const bottom = landmarks[eyeIndices[3]];
+    
+    // Get the additional points for better measurement
+    const p1 = landmarks[eyeIndices[4]];
+    const p2 = landmarks[eyeIndices[5]];
+    
+    // Validate all points exist
+    if (!corner1 || !corner2 || !top || !bottom || !p1 || !p2) {
+      console.warn('Missing landmark points for EAR calculation');
+      return 1.0;
+    }
+    
+    // Calculate vertical distances (average of two measurements)
+    const v1 = euclideanDistance(p1, p2);
+    const v2 = euclideanDistance(top, bottom);
+    
+    // Calculate horizontal distance
+    const h = euclideanDistance(corner1, corner2);
+    
+    // Calculate EAR using the formula: EAR = (v1 + v2) / (2 * h)
+    if (h === 0) return 1.0; // Prevent division by zero
+    
+    const currentEAR = (v1 + v2) / (2.0 * h);
+    
+    // Add to history and maintain fixed size
+    earHistory.push(currentEAR);
+    if (earHistory.length > EAR_HISTORY_SIZE) {
+      earHistory.shift();
+    }
+    
+    // Return moving average
+    const averageEAR = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
+    return averageEAR;
+  } catch (error) {
+    console.error('Error calculating EAR:', error);
+    return 1.0;
+  }
 };

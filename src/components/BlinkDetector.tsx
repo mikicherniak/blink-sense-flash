@@ -1,169 +1,40 @@
-import React, { useEffect, useRef, useState } from 'react';
-import * as tf from '@tensorflow/tfjs-core';
-import '@tensorflow/tfjs-backend-webgl';
+import React, { useEffect } from 'react';
 import { VideoDisplay } from './VideoDisplay';
-import { createFaceMesh } from '@/utils/faceMeshSetup';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
-import { MIN_BLINKS_PER_MINUTE, MEASUREMENT_PERIOD } from '@/utils/blinkDetection';
-import { triggerBlinkReminder } from './BlinkReminder';
-import { toast } from 'sonner';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { BlinkStats } from './BlinkStats';
-
-const LOW_BPM_THRESHOLD = 20;
-const WARNING_DELAY = 10000; // 10 seconds
+import { useBlinkTracking } from '@/hooks/useBlinkTracking';
+import { useCamera } from '@/hooks/useCamera';
+import { useWarningFlash } from '@/hooks/useWarningFlash';
 
 export const BlinkDetector = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [blinksInLastMinute, setBlinksInLastMinute] = useState<number[]>([]);
-  const [lastBlinkTime, setLastBlinkTime] = useState(0);
-  const [faceMeshResults, setFaceMeshResults] = useState<any>(null);
-  const [monitoringStartTime] = useState(Date.now());
-  const [totalBlinks, setTotalBlinks] = useState(0);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [showWarningFlash, setShowWarningFlash] = useState(false);
-  
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const faceMeshRef = useRef<any>(null);
-  const lastEyeStateRef = useRef<'open' | 'closed'>('open');
-  const lowBpmStartTime = useRef<number | null>(null);
-  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const {
+    blinksInLastMinute,
+    setBlinksInLastMinute,
+    monitoringStartTime,
+    lastEyeStateRef,
+    getCurrentBlinksPerMinute,
+    getAverageBlinksPerMinute,
+    getSessionDuration,
+    handleBlink
+  } = useBlinkTracking();
 
-  const getCurrentBlinksPerMinute = () => {
-    const now = Date.now();
-    const oneMinuteAgo = now - 60000;
-    const recentBlinks = blinksInLastMinute.filter(time => time > oneMinuteAgo);
-    return recentBlinks.length;
-  };
+  const {
+    isLoading,
+    setIsLoading,
+    cameraError,
+    faceMeshResults,
+    videoRef,
+    canvasRef,
+    setupFaceMesh,
+    setupCamera,
+    processVideo
+  } = useCamera();
 
-  const getAverageBlinksPerMinute = () => {
-    const now = Date.now();
-    const sessionDurationMinutes = (now - monitoringStartTime) / 60000;
-    
-    // For the first minute, return the current BPM
-    if (sessionDurationMinutes <= 1) {
-      return getCurrentBlinksPerMinute();
-    }
-    
-    // After the first minute, calculate the true average
-    return sessionDurationMinutes > 0 ? Math.round((totalBlinks / sessionDurationMinutes) * 10) / 10 : 0;
-  };
-
-  const getSessionDuration = () => {
-    const durationMs = Date.now() - monitoringStartTime;
-    const minutes = Math.floor(durationMs / 60000);
-    const seconds = Math.floor((durationMs % 60000) / 1000);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const checkBlinkRate = () => {
-    const now = Date.now();
-    const currentAverage = getAverageBlinksPerMinute();
-    
-    if (currentAverage < LOW_BPM_THRESHOLD) {
-      if (!lowBpmStartTime.current) {
-        lowBpmStartTime.current = now;
-      } else if (now - lowBpmStartTime.current >= WARNING_DELAY) {
-        setShowWarningFlash(true);
-        if (warningTimeoutRef.current) {
-          clearTimeout(warningTimeoutRef.current);
-        }
-        warningTimeoutRef.current = setTimeout(() => {
-          setShowWarningFlash(false);
-        }, 1000);
-      }
-    } else {
-      lowBpmStartTime.current = null;
-      setShowWarningFlash(false);
-    }
-    
-    // Original blink reminder check
-    const monitoringDuration = now - monitoringStartTime;
-    if (monitoringDuration >= 60000 && getCurrentBlinksPerMinute() < MIN_BLINKS_PER_MINUTE) {
-      triggerBlinkReminder();
-    }
-  };
-
-  const handleBlink = () => {
-    const now = Date.now();
-    setBlinksInLastMinute(prev => [...prev, now]);
-    setLastBlinkTime(now);
-    setTotalBlinks(prev => prev + 1);
-  };
-
-  useEffect(() => {
-    const cleanup = setInterval(() => {
-      const now = Date.now();
-      const oneMinuteAgo = now - 60000;
-      setBlinksInLastMinute(prev => prev.filter(time => time > oneMinuteAgo));
-    }, 1000);
-
-    return () => clearInterval(cleanup);
-  }, []);
-
-  const setupFaceMesh = async () => {
-    try {
-      await tf.setBackend('webgl');
-      await tf.ready();
-      console.log('TensorFlow backend ready:', tf.getBackend());
-      
-      faceMeshRef.current = await createFaceMesh();
-      console.log('FaceMesh created successfully');
-      
-      if (faceMeshRef.current) {
-        faceMeshRef.current.onResults((results: any) => {
-          setFaceMeshResults(results);
-        });
-      }
-    } catch (error) {
-      console.error('Error setting up FaceMesh:', error);
-      setCameraError('Failed to initialize face detection');
-      setIsLoading(false);
-    }
-  };
-
-  const setupCamera = async () => {
-    try {
-      const constraints = {
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user',
-          frameRate: { ideal: 30 }
-        }
-      };
-
-      console.log('Requesting camera with constraints:', constraints);
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('Camera stream obtained successfully');
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.playsInline = true; // Important for iOS
-        await videoRef.current.play();
-        console.log('Video element playing');
-      }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      setCameraError('Unable to access camera. Please ensure camera permissions are granted.');
-      setIsLoading(false);
-      toast.error('Camera access failed. Please check permissions.');
-    }
-  };
-
-  const processVideo = async () => {
-    if (!videoRef.current || !faceMeshRef.current) return;
-    
-    try {
-      if (videoRef.current.videoWidth > 0) {
-        await faceMeshRef.current.send({ image: videoRef.current });
-      }
-      requestAnimationFrame(processVideo);
-    } catch (error) {
-      console.error('Error processing video frame:', error);
-    }
-  };
+  const {
+    showWarningFlash,
+    checkBlinkRate
+  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime);
 
   useEffect(() => {
     const init = async () => {
@@ -180,6 +51,16 @@ export const BlinkDetector = () => {
         tracks.forEach(track => track.stop());
       }
     };
+  }, []);
+
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      const oneMinuteAgo = now - 60000;
+      setBlinksInLastMinute(prev => prev.filter(time => time > oneMinuteAgo));
+    }, 1000);
+
+    return () => clearInterval(cleanup);
   }, []);
 
   useEffect(() => {

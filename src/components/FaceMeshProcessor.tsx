@@ -8,13 +8,13 @@ interface FaceMeshProcessorProps {
   lastEyeStateRef: React.MutableRefObject<'open' | 'closed'>;
 }
 
-// Separate the landmark drawing logic into a dedicated component
-const LandmarkRenderer: React.FC<{
-  landmarks: any;
-  canvas: HTMLCanvasElement;
-  ctx: CanvasRenderingContext2D;
-  videoElement: HTMLVideoElement;
-}> = ({ landmarks, canvas, ctx, videoElement }) => {
+// Separate the landmark drawing logic into a dedicated function
+const renderLandmarks = (
+  landmarks: any,
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  videoElement: HTMLVideoElement
+) => {
   // Calculate scaling factors based on video and canvas dimensions
   const scaleX = canvas.width / videoElement.videoWidth;
   const scaleY = canvas.height / videoElement.videoHeight;
@@ -67,9 +67,6 @@ const LandmarkRenderer: React.FC<{
 
   drawEyeOutline(LEFT_EYE);
   drawEyeOutline(RIGHT_EYE);
-
-  // React components must return something
-  return null;
 };
 
 export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
@@ -179,13 +176,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Render landmarks using the dedicated component
-    return <LandmarkRenderer
-      landmarks={landmarks}
-      canvas={canvas}
-      ctx={ctx}
-      videoElement={videoElement}
-    />;
+    // Render landmarks directly within the effect
+    renderLandmarks(landmarks, canvas, ctx, videoElement);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

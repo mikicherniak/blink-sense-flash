@@ -1,8 +1,9 @@
 // According to research papers and MediaPipe documentation, typical EAR values:
 // - Open eyes: ~0.2-0.3
 // - Closed eyes: ~0.05-0.15
-export const BLINK_THRESHOLD = 0.23; // Increased from 0.21 for better sensitivity
-export const BLINK_BUFFER = 0.02;   // Increased buffer for more stable state changes
+// Lowered threshold and buffer for more sensitive detection
+export const BLINK_THRESHOLD = 0.215; // Lowered from 0.23 for better sensitivity
+export const BLINK_BUFFER = 0.015;    // Reduced buffer for quicker state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
@@ -40,8 +41,8 @@ const euclideanDistance = (p1: Point, p2: Point) => {
   );
 };
 
-// Added moving average for EAR values to reduce noise
-const EAR_HISTORY_SIZE = 3;
+// Increased history size for smoother detection
+const EAR_HISTORY_SIZE = 4;
 let earHistory: number[] = [];
 
 export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
@@ -64,17 +65,17 @@ export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
       return 1.0;
     }
     
-    // Calculate vertical distances (average of two measurements)
-    const v1 = euclideanDistance(p1, p2);
-    const v2 = euclideanDistance(top, bottom);
+    // Calculate vertical distances with weighted importance
+    const v1 = euclideanDistance(p1, p2) * 1.15; // Give more weight to inner points
+    const v2 = euclideanDistance(top, bottom) * 1.1; // Give more weight to central points
     
     // Calculate horizontal distance
     const h = euclideanDistance(corner1, corner2);
     
-    // Calculate EAR using the formula: EAR = (v1 + v2) / (2 * h)
+    // Calculate EAR using the weighted formula
     if (h === 0) return 1.0; // Prevent division by zero
     
-    const currentEAR = (v1 + v2) / (2.0 * h);
+    const currentEAR = ((v1 + v2) / 2.0) / h;
     
     // Add to history and maintain fixed size
     earHistory.push(currentEAR);
@@ -82,8 +83,12 @@ export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
       earHistory.shift();
     }
     
-    // Return moving average
-    const averageEAR = earHistory.reduce((a, b) => a + b, 0) / earHistory.length;
+    // Return weighted moving average (recent values have more weight)
+    const weights = [0.1, 0.2, 0.3, 0.4]; // Weights must sum to 1
+    const averageEAR = earHistory.reduce((acc, ear, index) => {
+      return acc + ear * weights[index];
+    }, 0);
+    
     return averageEAR;
   } catch (error) {
     console.error('Error calculating EAR:', error);

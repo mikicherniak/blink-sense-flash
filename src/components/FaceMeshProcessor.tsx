@@ -67,6 +67,9 @@ const LandmarkRenderer: React.FC<{
 
   drawEyeOutline(LEFT_EYE);
   drawEyeOutline(RIGHT_EYE);
+
+  // React components must return something
+  return null;
 };
 
 export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
@@ -177,12 +180,12 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     lastEARRef.current = avgEAR;
 
     // Render landmarks using the dedicated component
-    LandmarkRenderer({
-      landmarks,
-      canvas,
-      ctx,
-      videoElement
-    });
+    return <LandmarkRenderer
+      landmarks={landmarks}
+      canvas={canvas}
+      ctx={ctx}
+      videoElement={videoElement}
+    />;
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

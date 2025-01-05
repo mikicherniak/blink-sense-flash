@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';

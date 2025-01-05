@@ -28,23 +28,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      // Get the video's natural dimensions
-      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
-      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
-
-      // Get the container dimensions
-      const containerWidth = videoElement.clientWidth;
-      const containerHeight = videoElement.clientHeight;
-
-      // Calculate the scaling factor to maintain aspect ratio
-      const scale = Math.min(
-        containerWidth / videoWidth,
-        containerHeight / videoHeight
-      );
-
-      // Set canvas dimensions to match the scaled video size
-      canvas.width = videoWidth * scale;
-      canvas.height = videoHeight * scale;
+      canvas.width = videoElement.clientWidth;
+      canvas.height = videoElement.clientHeight;
 
       // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
@@ -123,16 +108,12 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const videoElement = document.querySelector('video');
     if (!videoElement) return;
 
-    // Calculate scale factors based on actual video dimensions vs canvas dimensions
-    const scaleX = canvas.width / videoElement.videoWidth;
-    const scaleY = canvas.height / videoElement.videoHeight;
-
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = point.x * videoElement.videoWidth * scaleX;
-      const y = point.y * videoElement.videoHeight * scaleY;
+      const x = point.x * canvas.width;
+      const y = point.y * canvas.height;
       
       ctx.beginPath();
       ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -148,8 +129,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * scaleX;
-        const y = point.y * videoElement.videoHeight * scaleY;
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
         
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -158,8 +139,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * scaleX;
-        const y = point.y * videoElement.videoHeight * scaleY;
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
         ctx.lineTo(x, y);
       });
       

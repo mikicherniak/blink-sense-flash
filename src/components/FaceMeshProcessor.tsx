@@ -8,6 +8,67 @@ interface FaceMeshProcessorProps {
   lastEyeStateRef: React.MutableRefObject<'open' | 'closed'>;
 }
 
+// Separate the landmark drawing logic into a dedicated component
+const LandmarkRenderer: React.FC<{
+  landmarks: any;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  videoElement: HTMLVideoElement;
+}> = ({ landmarks, canvas, ctx, videoElement }) => {
+  // Calculate scaling factors based on video and canvas dimensions
+  const scaleX = canvas.width / videoElement.videoWidth;
+  const scaleY = canvas.height / videoElement.videoHeight;
+
+  // Transform landmark coordinates to canvas space
+  const transformCoordinate = (point: { x: number; y: number }) => {
+    return {
+      x: point.x * videoElement.videoWidth * scaleX,
+      y: point.y * videoElement.videoHeight * scaleY
+    };
+  };
+
+  // Draw landmarks
+  ctx.fillStyle = '#00FF00';
+  [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
+    if (landmarks[index]) {
+      const { x, y } = transformCoordinate(landmarks[index]);
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+
+  // Draw eye outlines
+  const drawEyeOutline = (indices: number[]) => {
+    if (!indices.every(i => landmarks[i])) {
+      console.warn('Missing landmarks for eye outline');
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00FF00';
+    ctx.lineWidth = 1;
+
+    // Define anatomically correct connection order
+    const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
+    
+    // Start with the first point
+    const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
+    ctx.moveTo(firstPoint.x, firstPoint.y);
+
+    // Connect points following the anatomical order
+    for (let i = 1; i < connectionOrder.length; i++) {
+      const point = transformCoordinate(landmarks[indices[connectionOrder[i]]]);
+      ctx.lineTo(point.x, point.y);
+    }
+
+    ctx.stroke();
+  };
+
+  drawEyeOutline(LEFT_EYE);
+  drawEyeOutline(RIGHT_EYE);
+};
+
 export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   results,
   canvasRef,
@@ -30,41 +91,34 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      // Get the video's natural dimensions
-      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
-      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
+      // Match canvas size to video dimensions exactly
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
 
-      // Get the container dimensions
-      const containerWidth = videoElement.clientWidth;
-      const containerHeight = videoElement.clientHeight;
-
-      // Calculate the scaling factor to maintain aspect ratio
-      const scale = Math.min(
-        containerWidth / videoWidth,
-        containerHeight / videoHeight
-      );
-
-      // Set canvas dimensions to match the scaled video size
-      canvas.width = videoWidth * scale;
-      canvas.height = videoHeight * scale;
+      // Scale the canvas display size using CSS to match container
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.objectFit = 'cover';
 
       // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
     };
 
-    const resizeObserver = new ResizeObserver(resizeCanvas);
     const videoElement = document.querySelector('video');
     if (videoElement) {
-      resizeObserver.observe(videoElement);
+      // Wait for video metadata to be loaded before initial resize
+      if (videoElement.readyState >= 2) {
+        resizeCanvas();
+      } else {
+        videoElement.addEventListener('loadedmetadata', resizeCanvas);
+      }
     }
 
-    resizeCanvas();
-
     return () => {
+      const videoElement = document.querySelector('video');
       if (videoElement) {
-        resizeObserver.unobserve(videoElement);
+        videoElement.removeEventListener('loadedmetadata', resizeCanvas);
       }
-      resizeObserver.disconnect();
     };
   }, [canvasRef]);
 
@@ -73,7 +127,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     const canvas = canvasRef.current;
     const ctx = canvasContextRef.current;
-    if (!ctx) return;
+    const videoElement = document.querySelector('video');
+    if (!ctx || !videoElement) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
@@ -121,49 +176,13 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks
-    ctx.fillStyle = '#00FF00';
-    [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
-      if (landmarks[index]) {
-        const point = landmarks[index];
-        const x = point.x * canvas.width;
-        const y = point.y * canvas.height;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 2, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+    // Render landmarks using the dedicated component
+    LandmarkRenderer({
+      landmarks,
+      canvas,
+      ctx,
+      videoElement
     });
-
-    // Draw eye outlines with anatomically correct connections
-    const drawEyeOutline = (indices: number[]) => {
-      if (!indices.every(i => landmarks[i])) {
-        console.warn('Missing landmarks for eye outline');
-        return;
-      }
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 1;
-
-      // Define the anatomically correct connection order
-      const connectionOrder = [0, 1, 2, 3, 4, 5, 0]; // Adding 0 again to close the loop
-      
-      // Start with the first point
-      const firstPoint = landmarks[indices[connectionOrder[0]]];
-      ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
-
-      // Connect points following the anatomical order
-      for (let i = 1; i < connectionOrder.length; i++) {
-        const point = landmarks[indices[connectionOrder[i]]];
-        ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-      }
-
-      ctx.stroke();
-    };
-
-    drawEyeOutline(LEFT_EYE);
-    drawEyeOutline(RIGHT_EYE);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

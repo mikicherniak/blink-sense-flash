@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { BlinkWarningFlash } from './BlinkWarningFlash';
+import { Toaster } from "@/components/ui/toaster";
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';
@@ -8,6 +7,7 @@ import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
+import { BlinkWarningFlash } from './BlinkWarningFlash';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -90,7 +90,7 @@ export const BlinkDetector = () => {
                 Blin<span className="font-black">X</span>
               </h1>
               <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                Adjusting your blink rate in real-time to prevent digital eye strain and maintain healthy eyes
+                Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>
             <button
@@ -105,9 +105,9 @@ export const BlinkDetector = () => {
                 }`}
               >
                 {isDark ? (
-                  <Sun className="w-3.5 h-3.5 text-neutral-600" />
-                ) : (
                   <Moon className="w-3.5 h-3.5 text-neutral-600" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-neutral-600" />
                 )}
               </span>
             </button>

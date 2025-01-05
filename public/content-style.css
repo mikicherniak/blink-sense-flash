@@ -1,0 +1,16 @@
+#blinx-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+  transition: opacity 0.1s ease-out;
+}
+
+#blinx-overlay.active {
+  opacity: 0.5;
+}

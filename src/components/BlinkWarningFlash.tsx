@@ -7,7 +7,9 @@ interface BlinkWarningFlashProps {
 export const BlinkWarningFlash: React.FC<BlinkWarningFlashProps> = ({ isVisible }) => {
   if (!isVisible) return null;
 
+  console.log('🎯 Rendering warning flash - isVisible:', isVisible);
+  
   return (
-    <div className="fixed inset-0 bg-red-500/50 animate-in pointer-events-none z-[100]" />
+    <div className="fixed inset-0 bg-primary/30 animate-in pointer-events-none z-[100]" />
   );
 };

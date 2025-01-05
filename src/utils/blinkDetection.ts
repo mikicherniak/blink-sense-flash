@@ -1,14 +1,13 @@
 // According to research papers and MediaPipe documentation, typical EAR values:
 // - Open eyes: ~0.2-0.3
 // - Closed eyes: ~0.05-0.15
-// Adjusted thresholds based on observed EAR values in console logs
-export const BLINK_THRESHOLD = 0.22; // Adjusted based on observed blink patterns
-export const BLINK_BUFFER = 0.01;    // Smaller buffer for faster state transitions
+// Further adjusted thresholds based on observed EAR values
+export const BLINK_THRESHOLD = 0.25; // Increased threshold to catch more blinks
+export const BLINK_BUFFER = 0.02;    // Increased buffer for more reliable state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 
 // MediaPipe FaceMesh indices for eye contours
-// These indices are for the main eye landmarks in MediaPipe's 468-point model
 export const LEFT_EYE = [
   362, // left-most point
   386, // top point
@@ -41,8 +40,8 @@ const euclideanDistance = (p1: Point, p2: Point) => {
   );
 };
 
-// Increased history size for even smoother detection
-const EAR_HISTORY_SIZE = 5;
+// Increased history size for more stable detection
+const EAR_HISTORY_SIZE = 3;
 let earHistory: number[] = [];
 
 export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
@@ -66,11 +65,11 @@ export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
     }
     
     // Calculate vertical distances with increased weights for better sensitivity
-    const v1 = euclideanDistance(p1, p2) * 1.25; // Increased weight for inner points
-    const v2 = euclideanDistance(top, bottom) * 1.15; // Increased weight for central points
+    const v1 = euclideanDistance(p1, p2) * 1.4; // Further increased weight for inner points
+    const v2 = euclideanDistance(top, bottom) * 1.3; // Further increased weight for central points
     
-    // Calculate horizontal distance with reduced weight to make EAR more sensitive
-    const h = euclideanDistance(corner1, corner2) * 0.95;
+    // Calculate horizontal distance with reduced weight
+    const h = euclideanDistance(corner1, corner2) * 0.9;
     
     // Calculate EAR using the weighted formula
     if (h === 0) return 1.0; // Prevent division by zero
@@ -83,12 +82,8 @@ export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
       earHistory.shift();
     }
     
-    // Return weighted moving average with exponential weights
-    // More recent values have exponentially more influence
-    const weights = [0.05, 0.1, 0.15, 0.3, 0.4]; // Exponential weights summing to 1
-    const averageEAR = earHistory.reduce((acc, ear, index) => {
-      return acc + ear * weights[index];
-    }, 0);
+    // Simple average for more stable results
+    const averageEAR = earHistory.reduce((acc, ear) => acc + ear, 0) / earHistory.length;
     
     return averageEAR;
   } catch (error) {

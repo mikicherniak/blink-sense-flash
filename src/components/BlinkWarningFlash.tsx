@@ -10,6 +10,6 @@ export const BlinkWarningFlash: React.FC<BlinkWarningFlashProps> = ({ isVisible 
   console.log('🎯 Rendering warning flash - isVisible:', isVisible);
   
   return (
-    <div className="fixed inset-0 bg-white animate-flash pointer-events-none z-[9999]" />
+    <div className="fixed inset-0 bg-white/90 animate-flash pointer-events-none z-[9999]" />
   );
 };

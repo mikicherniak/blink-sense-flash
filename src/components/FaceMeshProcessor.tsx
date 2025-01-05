@@ -81,6 +81,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
+    if (!landmarks) return;
     
     // Calculate EAR for both eyes
     const leftEAR = calculateEAR(landmarks, LEFT_EYE);
@@ -129,24 +130,33 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
-      const point = landmarks[index];
-      const x = point.x * canvas.width;
-      const y = point.y * canvas.height;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, 2 * Math.PI);
-      ctx.fill();
+      if (landmarks[index]) {
+        const point = landmarks[index];
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
     });
 
     // Draw simplified eye outlines with proper connections
-
     const drawSimplifiedEyeOutline = (indices: number[]) => {
+      // Validate that all required landmarks exist before drawing
+      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 14, 13, 12, 11, 10, 9];
+      const validPoints = connectionOrder.every(i => 
+        indices[i] !== undefined && landmarks[indices[i]] !== undefined
+      );
+
+      if (!validPoints) {
+        console.warn('Invalid landmarks detected, skipping eye outline drawing');
+        return;
+      }
+
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 1;
-      
-      // Define the connection order for smoother outline
-      const connectionOrder = [0, 1, 2, 3, 4, 5, 6, 7, 8, 15, 14, 13, 12, 11, 10, 9];
       
       // Start from the first point
       const startPoint = landmarks[indices[connectionOrder[0]]];

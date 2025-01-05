@@ -4,6 +4,7 @@ import { triggerBlinkReminder } from '@/components/BlinkReminder';
 
 const LOW_BPM_THRESHOLD = 15;
 const WARNING_DELAY = 5000; // Reduced to 5 seconds for testing
+const FLASH_DURATION = 200; // Match the animation duration
 
 export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitoringStartTime: number) => {
   const [showWarningFlash, setShowWarningFlash] = useState(false);
@@ -35,7 +36,7 @@ export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitor
         warningTimeoutRef.current = setTimeout(() => {
           console.log('💫 Hiding warning flash');
           setShowWarningFlash(false);
-        }, 1000);
+        }, FLASH_DURATION);
       }
     } else {
       if (lowBpmStartTime.current) {

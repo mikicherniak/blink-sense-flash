@@ -90,7 +90,7 @@ export const BlinkDetector = () => {
                 Blin<span className="font-black">X</span>
               </h1>
               <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                Monitoring your blink rate in real-time to help prevent digital eye strain
+                Adjust your blink rate in real-time to prevent digital eye strain and maintain healthy eyes
               </p>
             </div>
             <button

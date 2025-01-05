@@ -28,18 +28,36 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      canvas.width = videoElement.clientWidth;
-      canvas.height = videoElement.clientHeight;
+      // Get the video's natural dimensions
+      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
+      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
 
+      // Get the container dimensions
+      const containerWidth = videoElement.clientWidth;
+      const containerHeight = videoElement.clientHeight;
+
+      // Calculate the scaling factor to maintain aspect ratio
+      const scale = Math.min(
+        containerWidth / videoWidth,
+        containerHeight / videoHeight
+      );
+
+      // Set canvas dimensions to match the scaled video size
+      canvas.width = videoWidth * scale;
+      canvas.height = videoHeight * scale;
+
+      // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
     };
 
+    // Create ResizeObserver to handle container size changes
     const resizeObserver = new ResizeObserver(resizeCanvas);
     const videoElement = document.querySelector('video');
     if (videoElement) {
       resizeObserver.observe(videoElement);
     }
 
+    // Initial resize
     resizeCanvas();
 
     return () => {
@@ -67,6 +85,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
+    // Log EAR values every 100ms to avoid console spam
     logIntervalRef.current++;
     if (logIntervalRef.current % 3 === 0) {
       console.log('Current EAR:', {
@@ -77,6 +96,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       });
     }
 
+    // Add hysteresis to prevent rapid state changes
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
     const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
@@ -99,69 +119,50 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks with adjusted spacing
+    // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
-    
-    // Function to calculate the center point of an eye
-    const calculateEyeCenter = (eyeIndices: number[]) => {
-      const points = eyeIndices.map(index => ({
-        x: landmarks[index].x * canvas.width,
-        y: landmarks[index].y * canvas.height
-      }));
+    [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
+      const point = landmarks[index];
+      const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
+      const y = point.y * canvas.height;
       
-      const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
-      const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
-      
-      return { x: centerX, y: centerY };
-    };
-
-    // Calculate eye centers
-    const leftEyeCenter = calculateEyeCenter(LEFT_EYE);
-    const rightEyeCenter = calculateEyeCenter(RIGHT_EYE);
-
-    // Draw eye outlines with adjusted positions
-    const drawEyeOutline = (eyeIndices: number[], centerPoint: { x: number, y: number }) => {
       ctx.beginPath();
+      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+
+    // Draw simplified eye outlines
+    const drawSimplifiedEyeOutline = (indices: number[]) => {
+      ctx.beginPath();
+      const upperIndices = indices.slice(0, indices.length / 2);
+      const lowerIndices = indices.slice(indices.length / 2).reverse();
       
-      // Calculate the eye width and height for scaling
-      const points = eyeIndices.map(index => ({
-        x: landmarks[index].x * canvas.width,
-        y: landmarks[index].y * canvas.height
-      }));
-      
-      const minX = Math.min(...points.map(p => p.x));
-      const maxX = Math.max(...points.map(p => p.x));
-      const eyeWidth = maxX - minX;
-      
-      // Draw the eye outline with increased size
-      const scale = 1.2; // Increase the size of the outline
-      
-      eyeIndices.forEach((index, i) => {
+      // Draw upper lid
+      upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = centerPoint.x + (point.x * canvas.width - centerPoint.x) * scale;
-        const y = centerPoint.y + (point.y * canvas.height - centerPoint.y) * scale;
+        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
+        const y = point.y * canvas.height;
         
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      
+      // Draw lower lid
+      lowerIndices.forEach((index) => {
+        const point = landmarks[index];
+        const x = point.x * canvas.width; // Removed the (1 - point.x) transformation
+        const y = point.y * canvas.height;
+        ctx.lineTo(x, y);
       });
       
       ctx.closePath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1;
       ctx.stroke();
-      
-      // Draw the center point
-      ctx.beginPath();
-      ctx.arc(centerPoint.x, centerPoint.y, 4, 0, 2 * Math.PI);
-      ctx.fill();
     };
 
-    // Draw the eye outlines
-    drawEyeOutline(LEFT_EYE, leftEyeCenter);
-    drawEyeOutline(RIGHT_EYE, rightEyeCenter);
+    drawSimplifiedEyeOutline(LEFT_EYE);
+    drawSimplifiedEyeOutline(RIGHT_EYE);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

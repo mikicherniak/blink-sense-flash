@@ -9,11 +9,10 @@ import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
-import { useToast } from '@/hooks/use-toast';
+import { triggerBlinkReminder } from './BlinkReminder';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
-  const { toast } = useToast();
   
   const {
     blinksInLastMinute,
@@ -70,15 +69,12 @@ export const BlinkDetector = () => {
     return () => clearInterval(cleanup);
   }, []);
 
+  // Effect for low BPM check
   useEffect(() => {
     const checkInterval = setInterval(() => {
       const currentBPM = getCurrentBlinksPerMinute();
       if (currentBPM < 12) {
-        toast({
-          title: "Low Blink Rate Detected",
-          description: "Remember to blink more frequently to prevent eye strain!",
-          duration: 10000, // Increased from 3000 to 10000 (10 seconds)
-        });
+        triggerBlinkReminder();
       }
       checkBlinkRate();
     }, 10000);
@@ -90,20 +86,7 @@ export const BlinkDetector = () => {
     const criticalCheckInterval = setInterval(() => {
       const currentBPM = getCurrentBlinksPerMinute();
       if (currentBPM < 5) {
-        const messages = [
-          "🚨 Critical: Your eyes need attention! Try blinking now!",
-          "👀 Hey there! Time to give your eyes a break!",
-          "💧 Your eyes are getting dry - blink a few times!",
-          "⚠️ Very low blink rate detected - look away from screen!",
-          "🌟 Quick reminder: Blink to refresh your eyes!"
-        ];
-        
-        toast({
-          variant: "destructive",
-          title: "Critical Blink Rate",
-          description: messages[Math.floor(Math.random() * messages.length)],
-          duration: 15000, // Increased from 4000 to 15000 (15 seconds)
-        });
+        triggerBlinkReminder();
       }
     }, 5000);
 

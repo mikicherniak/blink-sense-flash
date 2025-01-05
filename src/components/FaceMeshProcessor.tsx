@@ -18,7 +18,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const lastEARRef = useRef<number>(1);
   const logIntervalRef = useRef<number>(0);
   const lastBlinkTimeRef = useRef<number>(0);
-  const MIN_TIME_BETWEEN_BLINKS = 200; // Minimum 200ms between blinks
+  const MIN_TIME_BETWEEN_BLINKS = 200;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -30,19 +30,34 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      canvas.width = videoElement.clientWidth;
-      canvas.height = videoElement.clientHeight;
+      // Get the video's natural dimensions
+      const videoWidth = videoElement.videoWidth || videoElement.clientWidth;
+      const videoHeight = videoElement.videoHeight || videoElement.clientHeight;
+
+      // Get the container dimensions
+      const containerWidth = videoElement.clientWidth;
+      const containerHeight = videoElement.clientHeight;
+
+      // Calculate the scaling factor to maintain aspect ratio
+      const scale = Math.min(
+        containerWidth / videoWidth,
+        containerHeight / videoHeight
+      );
+
+      // Set canvas dimensions to match the scaled video size
+      canvas.width = videoWidth * scale;
+      canvas.height = videoHeight * scale;
+
+      // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
     };
 
-    // Create ResizeObserver to handle container size changes
     const resizeObserver = new ResizeObserver(resizeCanvas);
     const videoElement = document.querySelector('video');
     if (videoElement) {
       resizeObserver.observe(videoElement);
     }
 
-    // Initial resize
     resizeCanvas();
 
     return () => {
@@ -60,18 +75,15 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const ctx = canvasContextRef.current;
     if (!ctx) return;
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     const landmarks = results.multiFaceLandmarks[0];
     if (!landmarks) return;
     
-    // Calculate EAR for both eyes
     const leftEAR = calculateEAR(landmarks, LEFT_EYE);
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
 
-    // Log EAR values every 100ms to avoid console spam
     logIntervalRef.current++;
     if (logIntervalRef.current % 3 === 0) {
       console.log('Current EAR:', {
@@ -85,7 +97,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
-    // Add hysteresis to prevent rapid state changes
     const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
     const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
 
@@ -110,7 +121,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Draw facial landmarks for debugging
+    // Draw facial landmarks
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       if (landmarks[index]) {
@@ -124,7 +135,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       }
     });
 
-    // Draw eye outlines
+    // Draw eye outlines with anatomically correct connections
     const drawEyeOutline = (indices: number[]) => {
       if (!indices.every(i => landmarks[i])) {
         console.warn('Missing landmarks for eye outline');
@@ -135,19 +146,19 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       ctx.strokeStyle = '#00FF00';
       ctx.lineWidth = 1;
 
+      // Define the anatomically correct connection order
+      const connectionOrder = [0, 1, 2, 3, 4, 5, 0]; // Adding 0 again to close the loop
+      
       // Start with the first point
-      const firstPoint = landmarks[indices[0]];
+      const firstPoint = landmarks[indices[connectionOrder[0]]];
       ctx.moveTo(firstPoint.x * canvas.width, firstPoint.y * canvas.height);
 
-      // Connect points in anatomically correct order
-      const anatomicalOrder = [0, 1, 2, 3, 4, 5];
-      anatomicalOrder.forEach(i => {
-        const point = landmarks[indices[i]];
+      // Connect points following the anatomical order
+      for (let i = 1; i < connectionOrder.length; i++) {
+        const point = landmarks[indices[connectionOrder[i]]];
         ctx.lineTo(point.x * canvas.width, point.y * canvas.height);
-      });
+      }
 
-      // Close the path
-      ctx.closePath();
       ctx.stroke();
     };
 

@@ -109,14 +109,15 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     if (!videoElement) return;
 
     // Calculate scale factors based on the video's natural dimensions and display size
-    const displayToNaturalRatio = videoElement.clientWidth / videoElement.videoWidth;
+    const scaleX = canvas.width / videoElement.videoWidth;
+    const scaleY = canvas.height / videoElement.videoHeight;
 
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
-      const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
+      const x = point.x * canvas.width;
+      const y = point.y * canvas.height;
       
       ctx.beginPath();
       ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -132,8 +133,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
-        const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
         
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -142,8 +143,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
-        const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
+        const x = point.x * canvas.width;
+        const y = point.y * canvas.height;
         ctx.lineTo(x, y);
       });
       

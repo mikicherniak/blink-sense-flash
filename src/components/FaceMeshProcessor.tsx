@@ -108,16 +108,15 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const videoElement = document.querySelector('video');
     if (!videoElement) return;
 
-    // Calculate scale factors based on the video's natural dimensions
-    const scaleX = canvas.width / (videoElement.videoWidth || canvas.width);
-    const scaleY = canvas.height / (videoElement.videoHeight || canvas.height);
+    // Calculate scale factors based on the video's natural dimensions and display size
+    const displayToNaturalRatio = videoElement.clientWidth / videoElement.videoWidth;
 
     // Draw facial landmarks for debugging
     ctx.fillStyle = '#00FF00';
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       const point = landmarks[index];
-      const x = point.x * videoElement.videoWidth * scaleX;
-      const y = point.y * videoElement.videoHeight * scaleY;
+      const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
+      const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
       
       ctx.beginPath();
       ctx.arc(x, y, 2, 0, 2 * Math.PI);
@@ -133,8 +132,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw upper lid
       upperIndices.forEach((index, i) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * scaleX;
-        const y = point.y * videoElement.videoHeight * scaleY;
+        const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
+        const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
         
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
@@ -143,8 +142,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       // Draw lower lid
       lowerIndices.forEach((index) => {
         const point = landmarks[index];
-        const x = point.x * videoElement.videoWidth * scaleX;
-        const y = point.y * videoElement.videoHeight * scaleY;
+        const x = point.x * videoElement.videoWidth * displayToNaturalRatio;
+        const y = point.y * videoElement.videoHeight * displayToNaturalRatio;
         ctx.lineTo(x, y);
       });
       

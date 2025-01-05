@@ -118,9 +118,9 @@ export const BlinkDetector = () => {
                 }`}
               >
                 {isDark ? (
-                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-all duration-300 transform rotate-[360deg]" />
+                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
                 ) : (
-                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-all duration-300 transform rotate-0" />
+                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
                 )}
               </span>
             </button>

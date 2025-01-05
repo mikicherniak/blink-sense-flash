@@ -79,8 +79,8 @@ export const BlinkDetector = () => {
       )}
       
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-muted/40">
-          <h1 className="text-6xl font-extrabold text-neutral-800">Blin<span className="font-black">X</span></h1>
+        <div className="bg-neutral-800/80 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-neutral-700/40">
+          <h1 className="text-6xl font-extrabold text-neutral-100">Blin<span className="font-black">X</span></h1>
         </div>
       </div>
       

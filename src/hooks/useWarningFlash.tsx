@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { MIN_BLINKS_PER_MINUTE } from '@/utils/blinkDetection';
-import { triggerBlinkReminder } from '@/components/BlinkReminder';
 
 const LOW_BPM_THRESHOLD = 12;
 const WARNING_DELAY = 3000;
@@ -15,38 +14,23 @@ export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitor
     const now = Date.now();
     const currentBPM = getCurrentBlinksPerMinute();
     
-    console.log('🔍 Checking blink rate:', {
-      currentBPM,
-      threshold: LOW_BPM_THRESHOLD,
-      lowBpmStartTime: lowBpmStartTime.current,
-      timeSinceStart: lowBpmStartTime.current ? now - lowBpmStartTime.current : 0,
-      showingWarning: showWarningFlash
-    });
-    
     if (currentBPM < LOW_BPM_THRESHOLD) {
       if (!lowBpmStartTime.current) {
-        console.log('📝 Started tracking low BPM period');
         lowBpmStartTime.current = now;
       } else if (now - lowBpmStartTime.current >= WARNING_DELAY) {
-        console.log('⚡ Triggering warning flash');
         setShowWarningFlash(true);
-        
-        // Trigger the blink reminder
-        triggerBlinkReminder();
         
         if (warningTimeoutRef.current) {
           clearTimeout(warningTimeoutRef.current);
         }
         
         warningTimeoutRef.current = setTimeout(() => {
-          console.log('💫 Hiding warning flash');
           setShowWarningFlash(false);
-          lowBpmStartTime.current = now; // Reset the start time for next check
+          lowBpmStartTime.current = now;
         }, FLASH_DURATION);
       }
     } else {
       if (lowBpmStartTime.current) {
-        console.log('✨ Resetting low BPM tracking - normal blink rate detected');
         lowBpmStartTime.current = null;
       }
       setShowWarningFlash(false);

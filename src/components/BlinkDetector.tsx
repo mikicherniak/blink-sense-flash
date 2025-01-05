@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Toaster } from "@/components/ui/toaster";
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';
@@ -9,7 +8,6 @@ import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
-import { triggerBlinkReminder } from './BlinkReminder';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -73,9 +71,6 @@ export const BlinkDetector = () => {
   useEffect(() => {
     const checkInterval = setInterval(() => {
       const currentBPM = getCurrentBlinksPerMinute();
-      if (currentBPM < 12) {
-        triggerBlinkReminder();
-      }
       checkBlinkRate();
     }, 10000);
     return () => clearInterval(checkInterval);
@@ -85,9 +80,7 @@ export const BlinkDetector = () => {
   useEffect(() => {
     const criticalCheckInterval = setInterval(() => {
       const currentBPM = getCurrentBlinksPerMinute();
-      if (currentBPM < 5) {
-        triggerBlinkReminder();
-      }
+      checkBlinkRate();
     }, 5000);
 
     return () => clearInterval(criticalCheckInterval);

@@ -6,13 +6,15 @@ import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun, Zap, Eye } from 'lucide-react';
+import { Moon, Sun, Flashlight, CircleDot, Eye } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { Toggle } from './ui/toggle';
+import { Input } from './ui/input';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
   const [warningEffect, setWarningEffect] = useState<WarningEffect>('flash');
+  const [targetBPM, setTargetBPM] = useState(15);
   
   const {
     blinksInLastMinute,
@@ -110,17 +112,35 @@ export const BlinkDetector = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <Toggle
-                pressed={warningEffect === 'blur'}
-                onPressedChange={(pressed) => setWarningEffect(pressed ? 'blur' : 'flash')}
-                className="relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600"
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM:</span>
+                <Input
+                  type="number"
+                  value={targetBPM}
+                  onChange={(e) => setTargetBPM(Number(e.target.value))}
+                  className="w-16 h-8 text-center"
+                  min={1}
+                  max={60}
+                />
+              </div>
+              <button
+                onClick={() => setWarningEffect(warningEffect === 'flash' ? 'blur' : 'flash')}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  warningEffect === 'blur' ? 'bg-neutral-600' : 'bg-neutral-300'
+                }`}
               >
-                {warningEffect === 'blur' ? (
-                  <Eye className="w-4 h-4" />
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-              </Toggle>
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                    warningEffect === 'blur' ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {warningEffect === 'blur' ? (
+                    <CircleDot className="w-3.5 h-3.5 text-neutral-600" />
+                  ) : (
+                    <Flashlight className="w-3.5 h-3.5 text-neutral-600" />
+                  )}
+                </span>
+              </button>
               <button
                 onClick={toggleTheme}
                 className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${

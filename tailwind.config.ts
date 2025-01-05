@@ -89,12 +89,18 @@ export default {
           '0%': { opacity: '0' },
           '10%': { opacity: '1' },
           '100%': { opacity: '0' },
+        },
+        'blur': {
+          '0%': { filter: 'blur(0px)' },
+          '50%': { filter: 'blur(8px)' },
+          '100%': { filter: 'blur(0px)' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'flash': 'flash 200ms ease-out'
+        'flash': 'flash 200ms ease-out',
+        'blur': 'blur 2000ms ease-in-out'
       }
     }
   },

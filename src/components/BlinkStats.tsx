@@ -9,8 +9,8 @@ interface BlinkStatsProps {
 
 export const BlinkStats: React.FC<BlinkStatsProps> = ({ currentBPM, averageBPM, sessionDuration, isDark }) => {
   const bgClass = isDark ? 'bg-neutral-800/80' : 'bg-background/30';
-  const textClass = isDark ? 'text-neutral-100' : 'text-neutral-800';
-  const labelClass = isDark ? 'text-neutral-300' : 'text-neutral-700';
+  const textClass = isDark ? 'text-neutral-100' : 'text-foreground';
+  const labelClass = isDark ? 'text-neutral-300' : 'text-foreground';
   const borderClass = isDark ? 'border-neutral-700/40' : 'border-muted/40';
 
   return (

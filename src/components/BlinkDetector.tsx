@@ -87,10 +87,10 @@ export const BlinkDetector = () => {
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
+              <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-foreground'}`}>
                 Blin<span className="font-black">X</span>
               </h1>
-              <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+              <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>
                 Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>

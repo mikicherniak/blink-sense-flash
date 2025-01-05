@@ -1,17 +1,15 @@
 import { useState, useRef } from 'react';
 import { MIN_BLINKS_PER_MINUTE } from '@/utils/blinkDetection';
 import { triggerBlinkReminder } from '@/components/BlinkReminder';
-import { useToast } from '@/components/ui/use-toast';
 
-const LOW_BPM_THRESHOLD = 12; // Lowered threshold for more frequent reminders
-const WARNING_DELAY = 3000; // Reduced to 3 seconds for more frequent checks
+const LOW_BPM_THRESHOLD = 12;
+const WARNING_DELAY = 3000;
 const FLASH_DURATION = 200;
 
 export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitoringStartTime: number) => {
   const [showWarningFlash, setShowWarningFlash] = useState(false);
   const lowBpmStartTime = useRef<number | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { toast } = useToast();
 
   const checkBlinkRate = () => {
     const now = Date.now();
@@ -33,13 +31,6 @@ export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitor
         console.log('⚡ Triggering warning flash');
         setShowWarningFlash(true);
         
-        // Show toast notification
-        toast({
-          title: "Blink Rate Low",
-          description: "Remember to blink more frequently!",
-          duration: 3000,
-        });
-
         // Trigger the blink reminder
         triggerBlinkReminder();
         

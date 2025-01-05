@@ -1,31 +1,26 @@
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
 
 interface BlinkStatsProps {
-  blinksPerMinute: number;
-  minBlinksPerMinute: number;
-  lastBlinkTime: number;
+  currentBPM: number;
+  averageBPM: number;
+  sessionDuration: string;
 }
 
-export const BlinkStats = ({ blinksPerMinute, minBlinksPerMinute, lastBlinkTime }: BlinkStatsProps) => {
-  const timeSinceLastBlink = Date.now() - lastBlinkTime;
-  const isRecentBlink = timeSinceLastBlink < 500; // Show indicator for 500ms after blink
-
+export const BlinkStats: React.FC<BlinkStatsProps> = ({ currentBPM, averageBPM, sessionDuration }) => {
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span>Blinks per minute</span>
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">{blinksPerMinute}</span>
-          {isRecentBlink && (
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-          )}
-        </div>
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-10 w-full max-w-4xl px-8">
+      <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
+        <span className="text-sm text-neutral-500">Current BPM</span>
+        <div className="text-2xl font-bold text-neutral-700">{currentBPM}</div>
       </div>
-      <Progress value={(blinksPerMinute / minBlinksPerMinute) * 100} />
-      <p className="text-sm text-muted-foreground text-center">
-        Recommended: {minBlinksPerMinute} blinks per minute
-      </p>
+      <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
+        <span className="text-sm text-neutral-500">Average BPM</span>
+        <div className="text-2xl font-bold text-neutral-700">{averageBPM}</div>
+      </div>
+      <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
+        <span className="text-sm text-neutral-500">Session Duration</span>
+        <div className="text-2xl font-bold text-neutral-700">{sessionDuration}</div>
+      </div>
     </div>
   );
 };

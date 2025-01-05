@@ -7,6 +7,11 @@ import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { MIN_BLINKS_PER_MINUTE, MEASUREMENT_PERIOD } from '@/utils/blinkDetection';
 import { triggerBlinkReminder } from './BlinkReminder';
 import { toast } from 'sonner';
+import { BlinkWarningFlash } from './BlinkWarningFlash';
+import { BlinkStats } from './BlinkStats';
+
+const LOW_BPM_THRESHOLD = 20;
+const WARNING_DELAY = 10000; // 10 seconds
 
 export const BlinkDetector = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,12 +21,14 @@ export const BlinkDetector = () => {
   const [monitoringStartTime] = useState(Date.now());
   const [totalBlinks, setTotalBlinks] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showWarningFlash, setShowWarningFlash] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const faceMeshRef = useRef<any>(null);
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
-  const lastCheckTime = useRef(Date.now());
+  const lowBpmStartTime = useRef<number | null>(null);
+  const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const getCurrentBlinksPerMinute = () => {
     const now = Date.now();
@@ -52,14 +59,28 @@ export const BlinkDetector = () => {
 
   const checkBlinkRate = () => {
     const now = Date.now();
-    const monitoringDuration = now - monitoringStartTime;
+    const currentAverage = getAverageBlinksPerMinute();
     
-    if (monitoringDuration < 60000) {
-      return;
+    if (currentAverage < LOW_BPM_THRESHOLD) {
+      if (!lowBpmStartTime.current) {
+        lowBpmStartTime.current = now;
+      } else if (now - lowBpmStartTime.current >= WARNING_DELAY) {
+        setShowWarningFlash(true);
+        if (warningTimeoutRef.current) {
+          clearTimeout(warningTimeoutRef.current);
+        }
+        warningTimeoutRef.current = setTimeout(() => {
+          setShowWarningFlash(false);
+        }, 1000);
+      }
+    } else {
+      lowBpmStartTime.current = null;
+      setShowWarningFlash(false);
     }
     
-    const currentRate = getCurrentBlinksPerMinute();
-    if (currentRate < MIN_BLINKS_PER_MINUTE) {
+    // Original blink reminder check
+    const monitoringDuration = now - monitoringStartTime;
+    if (monitoringDuration >= 60000 && getCurrentBlinksPerMinute() < MIN_BLINKS_PER_MINUTE) {
       triggerBlinkReminder();
     }
   };
@@ -168,30 +189,25 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
+      <BlinkWarningFlash isVisible={showWarningFlash} />
+      
       {cameraError && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg">
           {cameraError}
         </div>
       )}
+      
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
         <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex justify-center border border-muted/40">
           <h1 className="text-6xl font-extrabold text-neutral-800">Blin<span className="font-black">X</span></h1>
         </div>
       </div>
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-10 w-full max-w-4xl px-8">
-        <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
-          <span className="text-sm text-neutral-500">Current BPM</span>
-          <div className="text-2xl font-bold text-neutral-700">{getCurrentBlinksPerMinute()}</div>
-        </div>
-        <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
-          <span className="text-sm text-neutral-500">Average BPM</span>
-          <div className="text-2xl font-bold text-neutral-700">{getAverageBlinksPerMinute()}</div>
-        </div>
-        <div className="bg-background/30 backdrop-blur-sm rounded-lg p-4 flex-1 border border-muted/40">
-          <span className="text-sm text-neutral-500">Session Duration</span>
-          <div className="text-2xl font-bold text-neutral-700">{getSessionDuration()}</div>
-        </div>
-      </div>
+      
+      <BlinkStats 
+        currentBPM={getCurrentBlinksPerMinute()}
+        averageBPM={getAverageBlinksPerMinute()}
+        sessionDuration={getSessionDuration()}
+      />
       
       <VideoDisplay 
         videoRef={videoRef}

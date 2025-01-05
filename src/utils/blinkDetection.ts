@@ -1,8 +1,8 @@
 // According to research papers and MediaPipe documentation, typical EAR values:
 // - Open eyes: ~0.2-0.3
 // - Closed eyes: ~0.05-0.15
-export const BLINK_THRESHOLD = 0.18; // Lowered from 0.2 to catch more subtle blinks
-export const BLINK_BUFFER = 0.01;   // Reduced from 0.02 to allow quicker state changes
+export const BLINK_THRESHOLD = 0.22; // Increased from 0.18 to catch more subtle blinks
+export const BLINK_BUFFER = 0.005;   // Reduced from 0.01 to allow for quicker state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
 

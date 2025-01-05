@@ -9,7 +9,7 @@ import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -75,9 +75,10 @@ export const BlinkDetector = () => {
       const currentBPM = getCurrentBlinksPerMinute();
       if (currentBPM < 12) {
         toast({
-          title: "Low Blink Rate Detected",
-          description: "Remember to blink more frequently to prevent eye strain!",
-          duration: 3000,
+          title: "⚠️ Low Blink Rate Alert!",
+          description: "Your blink rate is below recommended levels. Try the 20-20-20 rule: Every 20 minutes, look at something 20 feet away for 20 seconds.",
+          variant: "destructive",
+          duration: 5000,
         });
       }
       checkBlinkRate();

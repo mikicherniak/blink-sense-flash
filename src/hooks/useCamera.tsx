@@ -14,7 +14,6 @@ export const useCamera = () => {
 
   const setupFaceMesh = async () => {
     try {
-      // Ensure WebGL backend is properly initialized
       await tf.setBackend('webgl');
       await tf.ready();
       console.log('TensorFlow backend ready:', tf.getBackend());
@@ -42,7 +41,7 @@ export const useCamera = () => {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: 'user',
-          frameRate: { ideal: 30 }
+          frameRate: { ideal: 60, min: 30 } // Increased from 30 to 60 fps
         }
       };
 
@@ -54,7 +53,11 @@ export const useCamera = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.playsInline = true;
         await videoRef.current.play();
-        console.log('Video element playing');
+        
+        // Log the actual frame rate we got
+        const videoTrack = stream.getVideoTracks()[0];
+        const settings = videoTrack.getSettings();
+        console.log('Actual camera settings:', settings);
       }
     } catch (error) {
       console.error('Error accessing camera:', error);

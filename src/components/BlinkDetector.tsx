@@ -4,13 +4,15 @@ import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';
 import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
-import { useWarningFlash } from '@/hooks/useWarningFlash';
+import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Zap, Eye } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
+import { Toggle } from './ui/toggle';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
+  const [warningEffect, setWarningEffect] = useState<WarningEffect>('flash');
   
   const {
     blinksInLastMinute,
@@ -38,7 +40,7 @@ export const BlinkDetector = () => {
   const {
     showWarningFlash,
     checkBlinkRate
-  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime);
+  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime, warningEffect);
 
   useEffect(() => {
     const init = async () => {
@@ -88,7 +90,7 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <BlinkWarningFlash isVisible={showWarningFlash} />
+      <BlinkWarningFlash isVisible={showWarningFlash} effect={warningEffect} />
       
       {cameraError && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg">
@@ -107,24 +109,37 @@ export const BlinkDetector = () => {
                 Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>
-            <button
-              onClick={toggleTheme}
-              className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                  isDark ? 'translate-x-5' : 'translate-x-0'
+            <div className="flex items-center gap-4">
+              <Toggle
+                pressed={warningEffect === 'blur'}
+                onPressedChange={(pressed) => setWarningEffect(pressed ? 'blur' : 'flash')}
+                className="relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600"
+              >
+                {warningEffect === 'blur' ? (
+                  <Eye className="w-4 h-4" />
+                ) : (
+                  <Zap className="w-4 h-4" />
+                )}
+              </Toggle>
+              <button
+                onClick={toggleTheme}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  isDark ? 'bg-neutral-600' : 'bg-neutral-300'
                 }`}
               >
-                {isDark ? (
-                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                )}
-              </span>
-            </button>
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                    isDark ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {isDark ? (
+                    <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  ) : (
+                    <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  )}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

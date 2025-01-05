@@ -4,9 +4,15 @@ import { MIN_BLINKS_PER_MINUTE } from '@/utils/blinkDetection';
 const LOW_BPM_THRESHOLD = 12;
 const WARNING_DELAY = 3000;
 const FLASH_DURATION = 200;
-const MIN_SESSION_DURATION = 10000; // 10 seconds before starting warnings
+const MIN_SESSION_DURATION = 10000;
 
-export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitoringStartTime: number) => {
+export type WarningEffect = 'flash' | 'blur';
+
+export const useWarningFlash = (
+  getCurrentBlinksPerMinute: () => number, 
+  monitoringStartTime: number,
+  warningEffect: WarningEffect
+) => {
   const [showWarningFlash, setShowWarningFlash] = useState(false);
   const lowBpmStartTime = useRef<number | null>(null);
   const warningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -15,19 +21,17 @@ export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitor
     const now = Date.now();
     const sessionDuration = now - monitoringStartTime;
     
-    // Don't show warnings in the first 10 seconds
     if (sessionDuration < MIN_SESSION_DURATION) {
       return;
     }
 
     const currentBPM = getCurrentBlinksPerMinute();
     
-    // Only show warning if BPM is critically low
     if (currentBPM < LOW_BPM_THRESHOLD) {
       if (!lowBpmStartTime.current) {
         lowBpmStartTime.current = now;
       } else if (now - lowBpmStartTime.current >= WARNING_DELAY) {
-        console.log('Warning flash triggered - Low BPM:', currentBPM);
+        console.log('Warning effect triggered - Low BPM:', currentBPM);
         setShowWarningFlash(true);
         
         if (warningTimeoutRef.current) {
@@ -37,10 +41,9 @@ export const useWarningFlash = (getCurrentBlinksPerMinute: () => number, monitor
         warningTimeoutRef.current = setTimeout(() => {
           setShowWarningFlash(false);
           lowBpmStartTime.current = now;
-        }, FLASH_DURATION);
+        }, warningEffect === 'flash' ? FLASH_DURATION : 2000);
       }
     } else {
-      // Reset the low BPM timer if BPM is normal
       if (lowBpmStartTime.current) {
         lowBpmStartTime.current = null;
       }

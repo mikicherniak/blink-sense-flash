@@ -83,11 +83,16 @@ export const BlinkDetector = () => {
       )}
       
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 flex flex-col gap-2 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
-          <div className="flex justify-between items-center">
-            <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
-              Blin<span className="font-black">X</span>
-            </h1>
+        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
+          <div className="flex items-start justify-between">
+            <div className="flex flex-col">
+              <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
+                Blin<span className="font-black">X</span>
+              </h1>
+              <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                Monitoring your blink rate in real-time to help prevent digital eye strain
+              </p>
+            </div>
             <button
               onClick={toggleTheme}
               className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
@@ -107,9 +112,6 @@ export const BlinkDetector = () => {
               </span>
             </button>
           </div>
-          <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
-            Monitoring your blink rate in real-time to help prevent digital eye strain
-          </p>
         </div>
       </div>
       

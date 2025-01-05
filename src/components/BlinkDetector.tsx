@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';

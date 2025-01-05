@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import * as tf from '@tensorflow/tfjs-core';
+import '@tensorflow/tfjs-backend-webgl';
 import { createFaceMesh } from '@/utils/faceMeshSetup';
 
 export const useCamera = () => {
@@ -13,6 +14,7 @@ export const useCamera = () => {
 
   const setupFaceMesh = async () => {
     try {
+      // Ensure WebGL backend is properly initialized
       await tf.setBackend('webgl');
       await tf.ready();
       console.log('TensorFlow backend ready:', tf.getBackend());
@@ -29,6 +31,7 @@ export const useCamera = () => {
       console.error('Error setting up FaceMesh:', error);
       setCameraError('Failed to initialize face detection');
       setIsLoading(false);
+      toast.error('Face detection initialization failed. Please try refreshing the page.');
     }
   };
 

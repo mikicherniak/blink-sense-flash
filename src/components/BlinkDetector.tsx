@@ -83,20 +83,11 @@ export const BlinkDetector = () => {
       )}
       
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
-        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 flex justify-between items-center border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
-          <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
-            Blin<span className="font-black">X</span>
-          </h1>
-          <div className="relative flex items-center gap-2">
-            <div className="relative">
-              <div className={`absolute left-0 top-1/2 -translate-y-1/2 ml-0.5 transition-opacity ${isDark ? 'opacity-100' : 'opacity-0'}`}>
-                <Sun className={`w-4 h-4 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
-              </div>
-              <div className={`absolute right-0 top-1/2 -translate-y-1/2 mr-0.5 transition-opacity ${!isDark ? 'opacity-100' : 'opacity-0'}`}>
-                <Moon className={`w-4 h-4 ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`} />
-              </div>
-              <div className="w-11 h-6" /> {/* Spacer to maintain layout */}
-            </div>
+        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 flex flex-col gap-2 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
+          <div className="flex justify-between items-center">
+            <h1 className={`text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-neutral-800'}`}>
+              Blin<span className="font-black">X</span>
+            </h1>
             <button
               onClick={toggleTheme}
               className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
@@ -104,12 +95,21 @@ export const BlinkDetector = () => {
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 transform ${
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 transform flex items-center justify-center ${
                   isDark ? 'translate-x-5' : 'translate-x-0'
                 }`}
-              />
+              >
+                {isDark ? (
+                  <Sun className="w-3.5 h-3.5 text-neutral-600" />
+                ) : (
+                  <Moon className="w-3.5 h-3.5 text-neutral-600" />
+                )}
+              </span>
             </button>
           </div>
+          <p className={`text-sm ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+            Monitoring your blink rate in real-time to help prevent digital eye strain
+          </p>
         </div>
       </div>
       

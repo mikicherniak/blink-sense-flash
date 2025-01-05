@@ -9,9 +9,11 @@ import { useWarningFlash } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 import { BlinkWarningFlash } from './BlinkWarningFlash';
+import { useToast } from '@/components/ui/use-toast';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
+  const { toast } = useToast();
   
   const {
     blinksInLastMinute,
@@ -69,7 +71,17 @@ export const BlinkDetector = () => {
   }, []);
 
   useEffect(() => {
-    const checkInterval = setInterval(checkBlinkRate, 10000);
+    const checkInterval = setInterval(() => {
+      const currentBPM = getCurrentBlinksPerMinute();
+      if (currentBPM < 12) {
+        toast({
+          title: "Low Blink Rate Detected",
+          description: "Remember to blink more frequently to prevent eye strain!",
+          duration: 3000,
+        });
+      }
+      checkBlinkRate();
+    }, 10000);
     return () => clearInterval(checkInterval);
   }, [blinksInLastMinute]);
 
@@ -101,14 +113,14 @@ export const BlinkDetector = () => {
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-200 transform flex items-center justify-center ${
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
                   isDark ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
                 {isDark ? (
-                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-transform duration-500 rotate-0 hover:rotate-180" />
+                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-all duration-500 animate-[spin_500ms_ease-in-out]" />
                 ) : (
-                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-transform duration-500 rotate-0 hover:rotate-180" />
+                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-all duration-500 animate-[spin_500ms_ease-in-out]" />
                 )}
               </span>
             </button>

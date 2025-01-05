@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
-import { Card } from '@/components/ui/card';
 import { VideoDisplay } from './VideoDisplay';
-import { BlinkStats } from './BlinkStats';
 import { createFaceMesh } from '@/utils/faceMeshSetup';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { MIN_BLINKS_PER_MINUTE, MEASUREMENT_PERIOD } from '@/utils/blinkDetection';
@@ -33,7 +31,15 @@ export const BlinkDetector = () => {
   };
 
   const getAverageBlinksPerMinute = () => {
-    const sessionDurationMinutes = (Date.now() - monitoringStartTime) / 60000;
+    const now = Date.now();
+    const sessionDurationMinutes = (now - monitoringStartTime) / 60000;
+    
+    // For the first minute, return the current BPM
+    if (sessionDurationMinutes <= 1) {
+      return getCurrentBlinksPerMinute();
+    }
+    
+    // After the first minute, calculate the true average
     return sessionDurationMinutes > 0 ? Math.round((totalBlinks / sessionDurationMinutes) * 10) / 10 : 0;
   };
 

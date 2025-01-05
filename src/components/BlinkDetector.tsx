@@ -77,7 +77,7 @@ export const BlinkDetector = () => {
         toast({
           title: "Low Blink Rate Detected",
           description: "Remember to blink more frequently to prevent eye strain!",
-          duration: 3000,
+          duration: 10000, // Increased from 3000 to 10000 (10 seconds)
         });
       }
       checkBlinkRate();
@@ -85,7 +85,7 @@ export const BlinkDetector = () => {
     return () => clearInterval(checkInterval);
   }, [blinksInLastMinute]);
 
-  // New effect for very low BPM check
+  // Effect for very low BPM check
   useEffect(() => {
     const criticalCheckInterval = setInterval(() => {
       const currentBPM = getCurrentBlinksPerMinute();
@@ -102,10 +102,10 @@ export const BlinkDetector = () => {
           variant: "destructive",
           title: "Critical Blink Rate",
           description: messages[Math.floor(Math.random() * messages.length)],
-          duration: 4000,
+          duration: 15000, // Increased from 4000 to 15000 (15 seconds)
         });
       }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(criticalCheckInterval);
   }, []);

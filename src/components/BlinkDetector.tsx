@@ -6,11 +6,12 @@ import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Zap, CircleDot } from 'lucide-react';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
   const [warningEffect, setWarningEffect] = useState<WarningEffect>('flash');
+  const [targetBPM, setTargetBPM] = useState(15);
   
   const {
     blinksInLastMinute,
@@ -70,16 +71,14 @@ export const BlinkDetector = () => {
   // Effect for low BPM check
   useEffect(() => {
     const checkInterval = setInterval(() => {
-      const currentBPM = getCurrentBlinksPerMinute();
       checkBlinkRate();
     }, 10000);
     return () => clearInterval(checkInterval);
-  }, [blinksInLastMinute]);
+  }, [blinksInLastMinute, targetBPM]);
 
   // Effect for very low BPM check
   useEffect(() => {
     const criticalCheckInterval = setInterval(() => {
-      const currentBPM = getCurrentBlinksPerMinute();
       checkBlinkRate();
     }, 5000);
 
@@ -99,24 +98,52 @@ export const BlinkDetector = () => {
                 Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>
-            <button
-              onClick={toggleTheme}
-              className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                  isDark ? 'translate-x-5' : 'translate-x-0'
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={toggleTheme}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  isDark ? 'bg-neutral-600' : 'bg-neutral-300'
                 }`}
               >
-                {isDark ? (
-                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                )}
-              </span>
-            </button>
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                    isDark ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {isDark ? (
+                    <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  ) : (
+                    <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  )}
+                </span>
+              </button>
+              <button
+                onClick={() => setWarningEffect(prev => prev === 'flash' ? 'blur' : 'flash')}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  warningEffect === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                    warningEffect === 'flash' ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {warningEffect === 'flash' ? (
+                    <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  ) : (
+                    <CircleDot className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  )}
+                </span>
+              </button>
+              <input
+                type="number"
+                value={targetBPM}
+                onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-16 px-2 py-1 text-sm rounded border bg-transparent"
+                min="1"
+                max="60"
+              />
+            </div>
           </div>
         </div>
       </div>

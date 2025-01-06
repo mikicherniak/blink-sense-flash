@@ -145,27 +145,27 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
         left: leftEAR.toFixed(3),
         right: rightEAR.toFixed(3),
         average: avgEAR.toFixed(3),
-        threshold: BLINK_THRESHOLD
+        threshold: BLINK_THRESHOLD,
+        lastEyeState: lastEyeStateRef.current
       });
     }
 
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
-    const isClosing = avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD;
-    const isOpening = avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEARRef.current < BLINK_THRESHOLD;
-
-    if (isClosing && lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
-      console.log('🔍 BLINK DETECTED!', {
-        EAR: avgEAR.toFixed(3),
-        threshold: BLINK_THRESHOLD,
-        previousEAR: lastEARRef.current.toFixed(3),
-        timeSinceLastBlink
-      });
-      lastEyeStateRef.current = 'closed';
-      lastBlinkTimeRef.current = now;
-      onBlink();
-    } else if (isOpening && lastEyeStateRef.current === 'closed') {
+    if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
+      if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
+        console.log('🔍 BLINK DETECTED!', {
+          EAR: avgEAR.toFixed(3),
+          threshold: BLINK_THRESHOLD,
+          previousEAR: lastEARRef.current.toFixed(3),
+          timeSinceLastBlink
+        });
+        lastEyeStateRef.current = 'closed';
+        lastBlinkTimeRef.current = now;
+        onBlink();
+      }
+    } else if (avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
       console.log('👁 Eyes reopened', {
         EAR: avgEAR.toFixed(3),
         threshold: BLINK_THRESHOLD,
@@ -176,7 +176,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Render landmarks directly within the effect
+    // Render landmarks
     renderLandmarks(landmarks, canvas, ctx, videoElement);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 

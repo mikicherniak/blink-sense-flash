@@ -6,15 +6,11 @@ import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun, Flashlight, CircleDot, Eye } from 'lucide-react';
-import { BlinkWarningFlash } from './BlinkWarningFlash';
-import { Toggle } from './ui/toggle';
-import { Input } from './ui/input';
+import { Moon, Sun } from 'lucide-react';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
   const [warningEffect, setWarningEffect] = useState<WarningEffect>('flash');
-  const [targetBPM, setTargetBPM] = useState(15);
   
   const {
     blinksInLastMinute,
@@ -92,14 +88,6 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <BlinkWarningFlash isVisible={showWarningFlash} effect={warningEffect} />
-      
-      {cameraError && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500/90 text-white px-4 py-2 rounded-lg">
-          {cameraError}
-        </div>
-      )}
-      
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
           <div className="flex items-start justify-between">
@@ -111,55 +99,24 @@ export const BlinkDetector = () => {
                 Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM:</span>
-                <Input
-                  type="number"
-                  value={targetBPM}
-                  onChange={(e) => setTargetBPM(Number(e.target.value))}
-                  className="w-16 h-8 text-center"
-                  min={1}
-                  max={60}
-                />
-              </div>
-              <button
-                onClick={() => setWarningEffect(warningEffect === 'flash' ? 'blur' : 'flash')}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                  warningEffect === 'blur' ? 'bg-neutral-600' : 'bg-neutral-300'
+            <button
+              onClick={toggleTheme}
+              className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                isDark ? 'bg-neutral-600' : 'bg-neutral-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                  isDark ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                    warningEffect === 'blur' ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                >
-                  {warningEffect === 'blur' ? (
-                    <CircleDot className="w-3.5 h-3.5 text-neutral-600" />
-                  ) : (
-                    <Flashlight className="w-3.5 h-3.5 text-neutral-600" />
-                  )}
-                </span>
-              </button>
-              <button
-                onClick={toggleTheme}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                  isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                    isDark ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                >
-                  {isDark ? (
-                    <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  ) : (
-                    <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  )}
-                </span>
-              </button>
-            </div>
+                {isDark ? (
+                  <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                )}
+              </span>
+            </button>
           </div>
         </div>
       </div>

@@ -103,50 +103,59 @@ export const BlinkDetector = () => {
               </p>
             </div>
             <div className="flex flex-col gap-4">
-              <button
-                onClick={toggleTheme}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                  isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                    isDark ? 'translate-x-5' : 'translate-x-0'
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Theme</span>
+                <button
+                  onClick={toggleTheme}
+                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                    isDark ? 'bg-neutral-600' : 'bg-neutral-300'
                   }`}
                 >
-                  {isDark ? (
-                    <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  ) : (
-                    <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  )}
-                </span>
-              </button>
-              <button
-                onClick={() => setWarningEffect(prev => prev === 'flash' ? 'blur' : 'flash')}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                  warningEffect === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                    warningEffect === 'flash' ? 'translate-x-5' : 'translate-x-0'
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                      isDark ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  >
+                    {isDark ? (
+                      <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    ) : (
+                      <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    )}
+                  </span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
+                <button
+                  onClick={() => setWarningEffect(prev => prev === 'flash' ? 'blur' : 'flash')}
+                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                    warningEffect === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
                   }`}
                 >
-                  {warningEffect === 'flash' ? (
-                    <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  ) : (
-                    <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  )}
-                </span>
-              </button>
-              <input
-                type="number"
-                value={targetBPM}
-                onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-16 px-2 py-1 text-sm rounded border bg-transparent"
-                min="1"
-                max="60"
-              />
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                      warningEffect === 'flash' ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  >
+                    {warningEffect === 'flash' ? (
+                      <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    ) : (
+                      <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    )}
+                  </span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM</span>
+                <input
+                  type="number"
+                  value={targetBPM}
+                  onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 px-2 py-1 text-sm rounded border bg-transparent"
+                  min="1"
+                  max="60"
+                />
+              </div>
             </div>
           </div>
         </div>

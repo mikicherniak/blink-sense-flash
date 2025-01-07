@@ -102,8 +102,8 @@ export const BlinkDetector = () => {
                 Adjusting your blink rate in real-time to prevent eye strain and maintain healthy eyes
               </p>
             </div>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-4 min-w-[200px]">
+              <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Theme</span>
                 <button
                   onClick={toggleTheme}
@@ -124,7 +124,7 @@ export const BlinkDetector = () => {
                   </span>
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
                 <button
                   onClick={() => setWarningEffect(prev => prev === 'flash' ? 'blur' : 'flash')}
@@ -145,7 +145,7 @@ export const BlinkDetector = () => {
                   </span>
                 </button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM</span>
                 <input
                   type="number"

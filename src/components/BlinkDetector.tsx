@@ -151,7 +151,7 @@ export const BlinkDetector = () => {
                   type="number"
                   value={targetBPM}
                   onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-                  className={`w-11 h-6 px-2 text-sm rounded border ${isDark ? 'text-neutral-400 bg-neutral-800 border-neutral-700' : 'text-foreground bg-background border-input'}`}
+                  className={`w-[52px] h-6 px-2 text-xs rounded border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isDark ? 'text-neutral-400 bg-neutral-800 border-neutral-700' : 'text-foreground bg-background border-input'}`}
                   min="1"
                   max="60"
                 />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';
+import { BlinkWarningFlash } from './BlinkWarningFlash';
 import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
@@ -87,6 +88,8 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
+      <BlinkWarningFlash isVisible={showWarningFlash} effect={warningEffect} />
+      
       <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-8">
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
           <div className="flex items-start justify-between">

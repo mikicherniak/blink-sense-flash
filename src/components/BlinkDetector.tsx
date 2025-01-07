@@ -7,7 +7,7 @@ import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun, Zap, Dots } from 'lucide-react';
+import { Moon, Sun, Zap, MoreHorizontal } from 'lucide-react';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -134,7 +134,7 @@ export const BlinkDetector = () => {
                   {warningEffect === 'flash' ? (
                     <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
                   ) : (
-                    <Dots className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    <MoreHorizontal className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
                   )}
                 </span>
               </button>

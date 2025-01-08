@@ -22,12 +22,10 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
 
   return (
     <div 
-      className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
-        isVisible ? 'animate-in fade-in blur-in duration-[2000ms]' : ''
-      }`}
+      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
       style={{ 
         backdropFilter: isVisible ? 'blur(8px)' : 'none',
-        transition: isVisible ? 'backdrop-filter 2000ms cubic-bezier(0.075, 0.02, 0.165, 1)' : 'none'
+        transition: isVisible ? 'backdrop-filter 4000ms cubic-bezier(0.01, 0, 0.05, 1)' : 'none'
       }}
     />
   );

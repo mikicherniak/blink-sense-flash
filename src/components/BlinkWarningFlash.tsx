@@ -26,8 +26,8 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
         isVisible ? 'animate-in fade-in blur-in duration-300' : 'animate-out fade-out blur-out duration-300'
       }`}
       style={{ 
-        backdropFilter: isVisible ? 'blur(8px)' : 'blur(0px)',
-        transition: 'backdrop-filter 300ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+        backdropFilter: isVisible ? 'blur(8px)' : 'none',
+        transition: isVisible ? 'backdrop-filter 300ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none'
       }}
     />
   );

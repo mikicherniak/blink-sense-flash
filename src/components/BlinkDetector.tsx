@@ -41,7 +41,7 @@ export const BlinkDetector = () => {
   const {
     showWarningFlash,
     checkBlinkRate
-  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime, warningEffect);
+  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime, warningEffect, targetBPM);
 
   useEffect(() => {
     const init = async () => {

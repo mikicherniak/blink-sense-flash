@@ -18,7 +18,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   useEffect(() => {
     let animationFrame: number;
     let startTime: number;
-    const duration = 4000; // 4 seconds
+    const duration = 1000; // 1 second
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;

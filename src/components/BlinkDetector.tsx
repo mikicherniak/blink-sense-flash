@@ -151,7 +151,7 @@ export const BlinkDetector = () => {
                   type="number"
                   value={targetBPM}
                   onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-                  className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-primary ${
                     isDark ? 'text-neutral-400 bg-neutral-600' : 'text-foreground bg-neutral-300'
                   }`}
                   min="1"
@@ -191,3 +191,4 @@ export const BlinkDetector = () => {
     </div>
   );
 };
+

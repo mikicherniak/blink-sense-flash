@@ -27,22 +27,22 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       if (isVisible) {
         // Ease-in cubic bezier approximation
         const eased = progress * progress * (3 - 2 * progress);
-        setBlurAmount(12 * (1 - eased));
+        setBlurAmount(12 * eased);
       } else {
         // Ease-out cubic bezier approximation
         const eased = 1 - Math.pow(1 - progress, 3);
-        setBlurAmount(12 * eased);
+        setBlurAmount(12 * (1 - eased));
       }
 
       if (progress < 1) {
         animationFrame = requestAnimationFrame(animate);
+      } else if (!isVisible) {
+        setBlurAmount(0);
       }
     };
 
-    if (isVisible || blurAmount > 0) {
-      startTime = 0;
-      animationFrame = requestAnimationFrame(animate);
-    }
+    startTime = 0;
+    animationFrame = requestAnimationFrame(animate);
 
     return () => {
       if (animationFrame) {

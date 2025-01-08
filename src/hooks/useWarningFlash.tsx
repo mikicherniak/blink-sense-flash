@@ -44,10 +44,16 @@ export const useEffectTrigger = (
         }, effectType === 'flash' ? FLASH_DURATION : 2000);
       }
     } else {
+      // Reset the low BPM timer and hide effect if BPM is above target
       if (lowBpmStartTime.current) {
         lowBpmStartTime.current = null;
       }
-      setShowEffect(false);
+      if (showEffect) {
+        setShowEffect(false);
+        if (effectTimeoutRef.current) {
+          clearTimeout(effectTimeoutRef.current);
+        }
+      }
     }
   };
 

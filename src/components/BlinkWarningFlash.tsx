@@ -13,9 +13,8 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
     }
   }, [isVisible, effect]);
 
-  if (!isVisible) return null;
-  
   if (effect === 'flash') {
+    if (!isVisible) return null;
     return (
       <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen bg-white/80 animate-[flash_200ms_ease-out]" />
     );
@@ -23,9 +22,13 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
 
   return (
     <div 
-      className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen transition-[backdrop-filter] duration-1000 ease-in-out ${
-        isVisible ? 'backdrop-blur-md' : 'backdrop-blur-none'
+      className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
+        isVisible ? 'animate-in fade-in blur-in duration-300' : 'animate-out fade-out blur-out duration-300'
       }`}
+      style={{ 
+        backdropFilter: isVisible ? 'blur(8px)' : 'blur(0px)',
+        transition: 'backdrop-filter 300ms ease-in-out'
+      }}
     />
   );
 };

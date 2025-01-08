@@ -124,35 +124,35 @@ export const BlinkDetector = () => {
                   </span>
                 </button>
               </div>
-            <div className="flex items-center justify-between">
-              <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
-              <button
-                onClick={() => setEffectType(prev => prev === 'flash' ? 'blur' : 'flash')}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                  effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                    effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
+              <div className="flex items-center justify-between">
+                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
+                <button
+                  onClick={() => setEffectType(prev => prev === 'flash' ? 'blur' : 'flash')}
+                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
+                    effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
                   }`}
                 >
-                  {effectType === 'flash' ? (
-                    <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  ) : (
-                    <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                  )}
-                </span>
-              </button>
-            </div>
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                      effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  >
+                    {effectType === 'flash' ? (
+                      <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    ) : (
+                      <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                    )}
+                  </span>
+                </button>
+              </div>
               <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM</span>
                 <input
                   type="number"
                   value={targetBPM}
                   onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-                  className={`w-[44px] h-6 px-2 text-xs rounded border [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    isDark ? 'text-neutral-400 bg-neutral-600 border-neutral-700' : 'text-foreground bg-neutral-300 border-input'
+                  className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    isDark ? 'text-neutral-400 bg-neutral-600' : 'text-foreground bg-neutral-300'
                   }`}
                   min="1"
                   max="60"

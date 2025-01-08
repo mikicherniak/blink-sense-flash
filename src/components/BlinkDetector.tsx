@@ -107,7 +107,7 @@ export const BlinkDetector = () => {
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Theme</span>
                 <button
                   onClick={toggleTheme}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
                     isDark ? 'bg-neutral-600' : 'bg-neutral-300'
                   }`}
                 >
@@ -128,7 +128,7 @@ export const BlinkDetector = () => {
               <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
               <button
                 onClick={() => setEffectType(prev => prev === 'flash' ? 'blur' : 'flash')}
-                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
                   effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
                 }`}
               >

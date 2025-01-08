@@ -29,14 +29,13 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
         const eased = progress * progress * (3 - 2 * progress);
         setBlurAmount(12 * eased);
       } else {
-        // Ease-out cubic bezier approximation
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setBlurAmount(12 * (1 - eased));
+        // Immediate reset when not visible
+        setBlurAmount(0);
       }
 
-      if (progress < 1) {
+      if (progress < 1 && isVisible) {
         animationFrame = requestAnimationFrame(animate);
-      } else if (!isVisible) {
+      } else {
         setBlurAmount(0);
       }
     };

@@ -22,6 +22,6 @@ export const BlinkWarningFlash: React.FC<BlinkWarningFlashProps> = ({ isVisible,
   }
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen backdrop-blur-md transition-all duration-1000 cubic-bezier(.25,.1,.25,1)" />
+    <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen backdrop-blur-md transition-all duration-1000 ease-[cubic-bezier(0.25,0.1,0.25,1.0)]" />
   );
 };

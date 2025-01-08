@@ -14,7 +14,7 @@ export const BlinkStats: React.FC<BlinkStatsProps> = ({ currentBPM, averageBPM, 
   const borderClass = isDark ? 'border-neutral-700/40' : 'border-muted/40';
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 z-10 w-full max-w-4xl px-8">
+    <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-2 sm:gap-6 z-10 w-full max-w-4xl px-4 sm:px-8">
       <div className={`${bgClass} backdrop-blur-sm rounded-lg p-4 flex-1 border ${borderClass}`}>
         <span className={`text-sm ${labelClass}`}>Current BPM</span>
         <div className={`text-2xl font-bold ${textClass}`}>{currentBPM}</div>

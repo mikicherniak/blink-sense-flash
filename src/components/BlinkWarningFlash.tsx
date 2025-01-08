@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { WarningEffect } from '@/hooks/useWarningFlash';
 
 interface BlinkEffectProps {
@@ -7,11 +7,49 @@ interface BlinkEffectProps {
 }
 
 export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) => {
+  const [blurAmount, setBlurAmount] = useState(0);
+
   useEffect(() => {
     if (isVisible && effect === 'flash') {
       window.postMessage({ type: 'BLINX_FLASH' }, '*');
     }
   }, [isVisible, effect]);
+
+  useEffect(() => {
+    let animationFrame: number;
+    let startTime: number;
+    const duration = 4000; // 4 seconds
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      
+      if (isVisible) {
+        // Ease-in cubic bezier approximation
+        const eased = progress * progress * (3 - 2 * progress);
+        setBlurAmount(12 * eased);
+      } else {
+        // Ease-out cubic bezier approximation
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setBlurAmount(12 * (1 - eased));
+      }
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    if (isVisible || blurAmount > 0) {
+      startTime = 0;
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isVisible]);
 
   if (effect === 'flash') {
     if (!isVisible) return null;
@@ -24,8 +62,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
     <div 
       className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
       style={{ 
-        backdropFilter: isVisible ? 'blur(12px)' : 'none',
-        transition: isVisible ? 'backdrop-filter 4000ms cubic-bezier(0.0001, 0, 0.001, 1)' : 'none'
+        backdropFilter: blurAmount > 0 ? `blur(${blurAmount}px)` : 'none',
       }}
     />
   );

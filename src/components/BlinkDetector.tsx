@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { VideoDisplay } from './VideoDisplay';
 import { FaceMeshProcessor } from './FaceMeshProcessor';
 import { BlinkStats } from './BlinkStats';
-import { BlinkWarningFlash } from './BlinkWarningFlash';
+import { BlinkEffect } from './BlinkWarningFlash';
 import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
-import { useWarningFlash, WarningEffect } from '@/hooks/useWarningFlash';
+import { useEffectTrigger, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun, Zap } from 'lucide-react';
 import { DotsIcon } from './icons/DotsIcon';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
-  const [warningEffect, setWarningEffect] = useState<WarningEffect>('flash');
+  const [effectType, setEffectType] = useState<WarningEffect>('flash');
   const [targetBPM, setTargetBPM] = useState(15);
   
   const {
@@ -39,9 +39,9 @@ export const BlinkDetector = () => {
   } = useCamera();
 
   const {
-    showWarningFlash,
+    showEffect,
     checkBlinkRate
-  } = useWarningFlash(getCurrentBlinksPerMinute, monitoringStartTime, warningEffect, targetBPM);
+  } = useEffectTrigger(getCurrentBlinksPerMinute, monitoringStartTime, effectType, targetBPM);
 
   useEffect(() => {
     const init = async () => {
@@ -89,7 +89,7 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <BlinkWarningFlash isVisible={showWarningFlash} effect={warningEffect} />
+      <BlinkEffect isVisible={showEffect} effect={effectType} />
       
       <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-4 sm:px-8">
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
@@ -124,27 +124,27 @@ export const BlinkDetector = () => {
                   </span>
                 </button>
               </div>
-              <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
-                <button
-                  onClick={() => setWarningEffect(prev => prev === 'flash' ? 'blur' : 'flash')}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
-                    warningEffect === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
+            <div className="flex items-center justify-between">
+              <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
+              <button
+                onClick={() => setEffectType(prev => prev === 'flash' ? 'blur' : 'flash')}
+                className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-neutral-600 ${
+                  effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                    effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                      warningEffect === 'flash' ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  >
-                    {warningEffect === 'flash' ? (
-                      <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    ) : (
-                      <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    )}
-                  </span>
-                </button>
-              </div>
+                  {effectType === 'flash' ? (
+                    <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  ) : (
+                    <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                  )}
+                </span>
+              </button>
+            </div>
               <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM</span>
                 <input

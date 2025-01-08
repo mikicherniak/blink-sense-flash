@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { WarningEffect } from '@/hooks/useWarningFlash';
 
-interface BlinkWarningFlashProps {
+interface BlinkEffectProps {
   isVisible: boolean;
   effect: WarningEffect;
 }
 
-export const BlinkWarningFlash: React.FC<BlinkWarningFlashProps> = ({ isVisible, effect }) => {
+export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) => {
   useEffect(() => {
     if (isVisible && effect === 'flash') {
       window.postMessage({ type: 'BLINX_FLASH' }, '*');

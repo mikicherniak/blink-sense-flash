@@ -70,37 +70,23 @@ export default {
       },
       keyframes: {
         'accordion-down': {
-          from: {
-            height: '0'
-          },
-          to: {
-            height: 'var(--radix-accordion-content-height)'
-          }
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' }
         },
         'accordion-up': {
-          from: {
-            height: 'var(--radix-accordion-content-height)'
-          },
-          to: {
-            height: '0'
-          }
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' }
         },
         'flash': {
           '0%': { opacity: '0' },
           '10%': { opacity: '1' },
           '100%': { opacity: '0' },
-        },
-        'blur': {
-          '0%': { filter: 'blur(0px)' },
-          '50%': { filter: 'blur(8px)' },
-          '100%': { filter: 'blur(0px)' },
         }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'flash': 'flash 200ms ease-out',
-        'blur': 'blur 2000ms ease-in-out'
+        'flash': 'flash 200ms ease-out'
       }
     }
   },

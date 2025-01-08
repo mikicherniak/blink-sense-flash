@@ -15,13 +15,13 @@ export const BlinkWarningFlash: React.FC<BlinkWarningFlashProps> = ({ isVisible,
 
   if (!isVisible) return null;
   
+  if (effect === 'flash') {
+    return (
+      <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen bg-white/80 animate-[flash_200ms_ease-out]" />
+    );
+  }
+
   return (
-    <div 
-      className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
-        effect === 'flash' 
-          ? 'bg-white/80 animate-[flash_200ms_ease-out]' 
-          : 'animate-[blur_2000ms_ease-in-out]'
-      }`} 
-    />
+    <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen backdrop-blur-md transition-all duration-1000 ease-in-out" />
   );
 };

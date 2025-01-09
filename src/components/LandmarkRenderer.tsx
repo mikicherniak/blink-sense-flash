@@ -102,8 +102,13 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
       const history = positionHistoryRef.current.get(indices[0]);
       const now = Date.now();
+      
+      // Only show X if we're in an actual counted blink state (EAR < threshold)
+      const avgEAR = calculateAverageEAR();
+      const isInBlinkState = avgEAR < 0.45;
       const isBlinking = history?.isBlinking && 
-                        (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION;
+                        (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION &&
+                        isInBlinkState;
 
       if (isBlinking) {
         // Draw X when blinking
@@ -153,12 +158,14 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const avgEAR = calculateAverageEAR();
       const now = Date.now();
       
+      // Only start blink animation when EAR goes below threshold
       if (avgEAR < 0.45 && !leftEyeHistory.isBlinking) {
         leftEyeHistory.isBlinking = true;
         rightEyeHistory.isBlinking = true;
         leftEyeHistory.blinkStartTime = now;
         rightEyeHistory.blinkStartTime = now;
-      } else if (avgEAR >= 0.45 && now - leftEyeHistory.blinkStartTime >= BLINK_ANIMATION_DURATION) {
+      } else if (avgEAR >= 0.45) {
+        // Reset blink state when eyes are open
         leftEyeHistory.isBlinking = false;
         rightEyeHistory.isBlinking = false;
       }

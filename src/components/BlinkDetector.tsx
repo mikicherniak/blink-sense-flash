@@ -109,7 +109,7 @@ export const BlinkDetector = () => {
                     Blin<span className="font-black">X</span>
                   </h1>
                   <p className={`text-[10px] sm:text-xs leading-tight ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>
-                    Adjusting your blink rate in real-time to protect your eyes
+                    Adjust your blink rate to protect your eyes
                   </p>
                 </div>
               </div>

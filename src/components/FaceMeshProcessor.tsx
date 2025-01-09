@@ -80,6 +80,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const logIntervalRef = useRef<number>(0);
   const lastBlinkTimeRef = useRef<number>(0);
   const MIN_TIME_BETWEEN_BLINKS = 200;
+  const consecutiveFramesRef = useRef<number>(0);
+  const CONSECUTIVE_FRAMES_THRESHOLD = 2;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -91,22 +93,16 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      // Match canvas size to video dimensions exactly
       canvas.width = videoElement.videoWidth;
       canvas.height = videoElement.videoHeight;
-
-      // Scale the canvas display size using CSS to match container
       canvas.style.width = '100%';
       canvas.style.height = '100%';
       canvas.style.objectFit = 'cover';
-
-      // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
     };
 
     const videoElement = document.querySelector('video');
     if (videoElement) {
-      // Wait for video metadata to be loaded before initial resize
       if (videoElement.readyState >= 2) {
         resizeCanvas();
       } else {
@@ -146,37 +142,45 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
         right: rightEAR.toFixed(3),
         average: avgEAR.toFixed(3),
         threshold: BLINK_THRESHOLD,
-        lastEyeState: lastEyeStateRef.current
+        lastEyeState: lastEyeStateRef.current,
+        consecutiveFrames: consecutiveFramesRef.current
       });
     }
 
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
-    if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
-      if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
-        console.log('🔍 BLINK DETECTED!', {
-          EAR: avgEAR.toFixed(3),
-          threshold: BLINK_THRESHOLD,
-          previousEAR: lastEARRef.current.toFixed(3),
-          timeSinceLastBlink
-        });
-        lastEyeStateRef.current = 'closed';
-        lastBlinkTimeRef.current = now;
-        onBlink();
-      }
+    if (avgEAR < BLINK_THRESHOLD) {
+      consecutiveFramesRef.current++;
+    } else {
+      consecutiveFramesRef.current = 0;
+    }
+
+    if (consecutiveFramesRef.current >= CONSECUTIVE_FRAMES_THRESHOLD && 
+        lastEyeStateRef.current === 'open' && 
+        timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
+      console.log('🔍 BLINK DETECTED!', {
+        EAR: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD,
+        previousEAR: lastEARRef.current.toFixed(3),
+        timeSinceLastBlink,
+        consecutiveFrames: consecutiveFramesRef.current
+      });
+      lastEyeStateRef.current = 'closed';
+      lastBlinkTimeRef.current = now;
+      onBlink();
+      consecutiveFramesRef.current = 0;
     } else if (avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
       console.log('👁 Eyes reopened', {
         EAR: avgEAR.toFixed(3),
         threshold: BLINK_THRESHOLD,
-        previousEAR: lastEARRef.current.toFixed(3)
+        previousEAR: lastEARRef.current.toFixed(3),
+        consecutiveFrames: consecutiveFramesRef.current
       });
       lastEyeStateRef.current = 'open';
     }
 
     lastEARRef.current = avgEAR;
-
-    // Render landmarks
     renderLandmarks(landmarks, canvas, ctx, videoElement);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 

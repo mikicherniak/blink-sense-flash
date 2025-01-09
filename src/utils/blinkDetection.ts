@@ -2,7 +2,7 @@
 // - Open eyes: ~0.65-0.75
 // - Closed eyes: ~0.45-0.55
 // Adjusted thresholds based on observed values in our application
-export const BLINK_THRESHOLD = 0.55; // Increased from 0.35 to better match actual eye closure values
+export const BLINK_THRESHOLD = 0.45; // Adjusted from 0.55 for better detection
 export const BLINK_BUFFER = 0.05;    // Buffer for more reliable state changes
 export const MIN_BLINKS_PER_MINUTE = 15;
 export const MEASUREMENT_PERIOD = 60000; // 1 minute in milliseconds
@@ -65,14 +65,14 @@ export const calculateEAR = (landmarks: any[], eyeIndices: number[]) => {
     }
     
     // Calculate vertical distances with increased weights for better sensitivity
-    const v1 = euclideanDistance(p1, p2) * 1.6; // Further increased weight for inner points
-    const v2 = euclideanDistance(top, bottom) * 1.5; // Further increased weight for central points
+    const v1 = euclideanDistance(p1, p2) * 1.6;
+    const v2 = euclideanDistance(top, bottom) * 1.5;
     
     // Calculate horizontal distance with reduced weight
-    const h = euclideanDistance(corner1, corner2) * 0.8; // Reduced weight to make ratio more sensitive
+    const h = euclideanDistance(corner1, corner2) * 0.8;
     
     // Calculate EAR using the weighted formula
-    if (h === 0) return 1.0; // Prevent division by zero
+    if (h === 0) return 1.0;
     
     const currentEAR = ((v1 + v2) / 2.0) / h;
     

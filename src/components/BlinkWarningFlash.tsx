@@ -25,13 +25,13 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
       if (isVisible) {
-        // Ease-in cubic bezier approximation
-        const eased = progress * progress * (3 - 2 * progress);
+        // Ease-in cubic bezier for blur-in effect
+        const eased = 1 - Math.pow(1 - progress, 3);
         setBlurAmount(12 * eased);
       } else {
-        // Ease-out cubic bezier approximation
-        const eased = 1 - Math.pow(1 - progress, 3);
-        setBlurAmount(12 * (1 - eased));
+        // Ease-out cubic bezier for blur-out effect
+        const eased = Math.pow(1 - progress, 3);
+        setBlurAmount(12 * eased);
       }
 
       if (progress < 1) {

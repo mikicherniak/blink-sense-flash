@@ -14,6 +14,7 @@ export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
   const [effectType, setEffectType] = useState<WarningEffect>('flash');
   const [targetBPM, setTargetBPM] = useState(15);
+  const [showPreview, setShowPreview] = useState(false);
   
   const {
     blinksInLastMinute,
@@ -42,6 +43,13 @@ export const BlinkDetector = () => {
     showEffect,
     checkBlinkRate
   } = useEffectTrigger(getCurrentBlinksPerMinute, monitoringStartTime, effectType, targetBPM);
+
+  const handleEffectToggle = () => {
+    const newEffect = effectType === 'flash' ? 'blur' : 'flash';
+    setEffectType(newEffect);
+    setShowPreview(true);
+    setTimeout(() => setShowPreview(false), newEffect === 'flash' ? 200 : 1000);
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -89,7 +97,7 @@ export const BlinkDetector = () => {
 
   return (
     <div className="flex flex-col items-center w-full h-full">
-      <BlinkEffect isVisible={showEffect} effect={effectType} />
+      <BlinkEffect isVisible={showEffect || showPreview} effect={effectType} />
       
       <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-4 sm:px-8">
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
@@ -127,7 +135,7 @@ export const BlinkDetector = () => {
               <div className="flex items-center justify-between">
                 <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
                 <button
-                  onClick={() => setEffectType(prev => prev === 'flash' ? 'blur' : 'flash')}
+                  onClick={handleEffectToggle}
                   className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
                     effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
                   }`}

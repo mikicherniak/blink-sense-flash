@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{isDark ? 'Dark mode' : 'Light mode'}</TooltipContent>
+              <TooltipContent>{isDark ? 'Dark' : 'Light'}</TooltipContent>
             </Tooltip>
           </div>
           <div className="flex items-center justify-between">
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent>{effectType === 'flash' ? 'Flash effect' : 'Blur effect'}</TooltipContent>
+              <TooltipContent>{effectType === 'flash' ? 'Flash' : 'Blur'}</TooltipContent>
             </Tooltip>
           </div>
           <div className="flex items-center justify-between">

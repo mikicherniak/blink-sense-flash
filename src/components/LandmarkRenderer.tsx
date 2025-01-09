@@ -31,7 +31,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2;
 
       const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
       const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
@@ -50,7 +50,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       if (landmarks[index]) {
         const { x, y } = transformCoordinate(landmarks[index]);
         ctx.beginPath();
-        ctx.arc(x, y, 2, 0, 2 * Math.PI);
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
         ctx.fill();
       }
     });

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 const MIN_SESSION_DURATION = 10000;
-const FLASH_DURATION = 100;
+const FLASH_DURATION = 200; // Increased for better visibility
 
 export type WarningEffect = 'flash' | 'blur';
 
@@ -16,7 +16,7 @@ export const useEffectTrigger = (
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const getRandomInterval = () => {
-    return Math.floor(Math.random() * (6000 - 3000) + 3000); // Random between 3-6 seconds
+    return Math.floor(Math.random() * 3000) + 3000; // Random between 3-6 seconds
   };
 
   const checkBlinkRate = () => {
@@ -32,10 +32,11 @@ export const useEffectTrigger = (
       currentBPM, 
       targetBPM, 
       showEffect,
-      nextCheckIn: getRandomInterval()
+      nextCheckIn: getRandomInterval(),
+      timestamp: new Date().toISOString()
     });
     
-    if (currentBPM < targetBPM) {
+    if (currentBPM < targetBPM && !showEffect) {
       console.log('Effect triggered - Low BPM:', currentBPM, 'Target:', targetBPM);
       setShowEffect(true);
       
@@ -45,20 +46,29 @@ export const useEffectTrigger = (
       
       effectTimeoutRef.current = setTimeout(() => {
         setShowEffect(false);
-      }, effectType === 'flash' ? FLASH_DURATION : 800);
+        console.log('Effect ended');
+        
+        // Schedule next check immediately after effect ends
+        if (checkIntervalRef.current) {
+          clearTimeout(checkIntervalRef.current);
+        }
+        scheduleNextCheck();
+      }, effectType === 'flash' ? FLASH_DURATION : 1000);
     }
   };
 
-  useEffect(() => {
-    const scheduleNextCheck = () => {
-      const interval = getRandomInterval();
-      checkIntervalRef.current = setTimeout(() => {
-        checkBlinkRate();
-        scheduleNextCheck(); // Schedule next check after current check
-      }, interval);
-    };
+  const scheduleNextCheck = () => {
+    const interval = getRandomInterval();
+    console.log('Scheduling next check in:', interval, 'ms');
+    checkIntervalRef.current = setTimeout(() => {
+      checkBlinkRate();
+      scheduleNextCheck();
+    }, interval);
+  };
 
-    scheduleNextCheck(); // Start the cycle
+  useEffect(() => {
+    console.log('Effect trigger initialized');
+    scheduleNextCheck();
 
     return () => {
       if (checkIntervalRef.current) {

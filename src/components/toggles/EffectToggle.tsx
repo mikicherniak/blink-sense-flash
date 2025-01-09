@@ -22,7 +22,7 @@ export const EffectToggle: React.FC<EffectToggleProps> = ({
     handleEffectToggle();
     setIsTooltipOpen(true);
     // Reset tooltip after a short delay
-    setTimeout(() => setIsTooltipOpen(false), 1500);
+    setTimeout(() => setIsTooltipOpen(false), 2000);
   };
 
   return (

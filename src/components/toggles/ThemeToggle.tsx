@@ -15,7 +15,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDark, toggleTheme })
     toggleTheme();
     setIsTooltipOpen(true);
     // Reset tooltip after a short delay
-    setTimeout(() => setIsTooltipOpen(false), 1500);
+    setTimeout(() => setIsTooltipOpen(false), 2000);
   };
 
   return (

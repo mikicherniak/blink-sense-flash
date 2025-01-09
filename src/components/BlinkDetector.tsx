@@ -105,10 +105,10 @@ export const BlinkDetector = () => {
             <div className="flex items-center gap-3">
               <div className="flex flex-col justify-center h-full min-h-[80px]">
                 <div className="flex flex-col justify-center h-full">
-                  <h1 className={`text-4xl sm:text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-foreground'}`}>
+                  <h1 className={`text-4xl sm:text-6xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
                     Blin<span className="font-black">X</span>
                   </h1>
-                  <p className={`text-xs leading-tight ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>
+                  <p className={`text-xs leading-tight ${isDark ? 'text-neutral-300' : 'text-muted-foreground'}`}>
                     Adjust your blink rate to protect your eyes
                   </p>
                 </div>

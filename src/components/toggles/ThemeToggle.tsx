@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { TEXT_SIZES } from '@/constants/typography';
@@ -9,15 +9,24 @@ interface ThemeToggleProps {
 }
 
 export const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDark, toggleTheme }) => {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+  const handleClick = () => {
+    toggleTheme();
+    setIsTooltipOpen(true);
+    // Reset tooltip after a short delay
+    setTimeout(() => setIsTooltipOpen(false), 1500);
+  };
+
   return (
     <div className="flex items-center justify-between">
       <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>
         Theme
       </span>
-      <Tooltip>
+      <Tooltip open={isTooltipOpen}>
         <TooltipTrigger asChild>
           <button
-            onClick={toggleTheme}
+            onClick={handleClick}
             className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
               isDark ? 'bg-neutral-600' : 'bg-neutral-300'
             }`}

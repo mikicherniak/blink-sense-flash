@@ -104,7 +104,7 @@ export const BlinkDetector = () => {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0">
             <div className="flex items-center gap-3">
               <div className="flex flex-col justify-center h-full min-h-[80px]">
-                <div className="flex flex-col items-center justify-center h-full">
+                <div className="flex flex-col justify-center h-full">
                   <h1 className={`text-4xl sm:text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-foreground'}`}>
                     Blin<span className="font-black">X</span>
                   </h1>

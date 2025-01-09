@@ -18,7 +18,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 }) => {
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  // Handle canvas setup
   useEffect(() => {
     if (!canvasRef.current) return;
     
@@ -32,7 +31,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     return initializeCanvas(canvasRef.current, canvasContextRef, resizeCanvas);
   }, [canvasRef]);
 
-  // Handle landmark processing and rendering
   useEffect(() => {
     if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
 
@@ -42,13 +40,6 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     if (!ctx || !videoElement) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const landmarks = results.multiFaceLandmarks[0];
-    if (!landmarks) return;
-
-    return () => {
-      // Cleanup function
-    };
   }, [results, canvasRef]);
 
   if (!results.multiFaceLandmarks?.length) return null;

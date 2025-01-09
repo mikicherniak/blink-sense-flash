@@ -109,70 +109,63 @@ export const BlinkDetector = () => {
             
             <div className="flex flex-col gap-4 min-w-[200px]">
               <div className="flex items-center justify-between">
-                <Tooltip>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
+                <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
-                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
+                    <button
+                      onClick={toggleTheme}
+                      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
+                        isDark ? 'bg-neutral-600' : 'bg-neutral-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                          isDark ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      >
+                        {isDark ? (
+                          <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                        ) : (
+                          <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                        )}
+                      </span>
+                    </button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Switch between light and dark mode</p>
+                  <TooltipContent side="right" className="text-xs">
+                    {isDark ? 'Dark mode active' : 'Light mode active'}
                   </TooltipContent>
                 </Tooltip>
-                <button
-                  onClick={toggleTheme}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                    isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                      isDark ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  >
-                    {isDark ? (
-                      <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    ) : (
-                      <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    )}
-                  </span>
-                </button>
               </div>
               <div className="flex items-center justify-between">
-                <Tooltip>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
+                <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
-                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
+                    <button
+                      onClick={handleEffectToggle}
+                      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
+                        effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
+                          effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      >
+                        {effectType === 'flash' ? (
+                          <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                        ) : (
+                          <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
+                        )}
+                      </span>
+                    </button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Choose between flash or blur warning effect</p>
+                  <TooltipContent side="right" className="text-xs">
+                    {effectType === 'flash' ? 'Flash effect active' : 'Blur effect active'}
                   </TooltipContent>
                 </Tooltip>
-                <button
-                  onClick={handleEffectToggle}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                    effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                      effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  >
-                    {effectType === 'flash' ? (
-                      <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    ) : (
-                      <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                    )}
-                  </span>
-                </button>
               </div>
               <div className="flex items-center justify-between">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set your target blinks per minute (recommended: 15-20)</p>
-                  </TooltipContent>
-                </Tooltip>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
                 <input
                   type="number"
                   value={targetBPM}

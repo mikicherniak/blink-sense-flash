@@ -29,7 +29,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
       <div 
         className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
           isDark ? 'bg-neutral-950' : 'bg-white'
-        } opacity-90`} 
+        } opacity-95`} 
       />
     ) : null;
   }
@@ -41,7 +41,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
         backdropFilter: `blur(${blurAmount}px)`,
         WebkitBackdropFilter: `blur(${blurAmount}px)`,
         opacity: blurAmount > 0 ? 1 : 0,
-        transition: isVisible ? 'all 1000ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none'
+        transition: isVisible ? 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)' : 'all 0ms linear'
       }}
     />
   );

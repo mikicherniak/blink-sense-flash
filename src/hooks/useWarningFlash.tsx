@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 
 const EFFECT_DELAY = 3000;
-const FLASH_DURATION = 100; // Reduced to 100ms for quicker flash
+const FLASH_DURATION = 100;
 const MIN_SESSION_DURATION = 10000;
 
 export type WarningEffect = 'flash' | 'blur';
@@ -46,8 +46,8 @@ export const useEffectTrigger = (
         
         effectTimeoutRef.current = setTimeout(() => {
           setShowEffect(false);
-          lowBpmStartTime.current = now; // Reset the start time after effect
-        }, effectType === 'flash' ? FLASH_DURATION : 1000);
+          lowBpmStartTime.current = null;
+        }, effectType === 'flash' ? FLASH_DURATION : 800);
       }
     } else {
       lowBpmStartTime.current = null;
@@ -60,7 +60,6 @@ export const useEffectTrigger = (
     }
   };
 
-  // Add effect to run checkBlinkRate periodically
   useEffect(() => {
     const interval = setInterval(checkBlinkRate, 1000);
     return () => clearInterval(interval);

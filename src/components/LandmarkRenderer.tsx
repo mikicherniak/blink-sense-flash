@@ -13,35 +13,77 @@ interface Point {
   y: number;
 }
 
+interface PositionHistory {
+  positions: Point[];
+  lastUpdateTime: number;
+}
+
 export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   landmarks,
   canvas,
   ctx,
   videoElement,
 }) => {
-  // Keep track of previous positions for smoothing
-  const previousPositionsRef = useRef<Point[]>([]);
+  // Keep track of position history for each point
+  const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
   
   useEffect(() => {
     const scaleX = canvas.width / videoElement.videoWidth;
     const scaleY = canvas.height / videoElement.videoHeight;
 
     const smoothPosition = (current: Point, index: number): Point => {
-      const SMOOTHING_FACTOR = 0.7; // Adjust this value to control smoothing (0-1)
+      const now = Date.now();
+      const HISTORY_SIZE = 10; // Increased history size
+      const MAX_HISTORY_AGE = 500; // Maximum age of history entries in ms
+      const SMOOTHING_FACTOR = 0.3; // Reduced smoothing factor for more stability
       
-      if (!previousPositionsRef.current[index]) {
-        previousPositionsRef.current[index] = current;
+      // Initialize history for this point if it doesn't exist
+      if (!positionHistoryRef.current.has(index)) {
+        positionHistoryRef.current.set(index, {
+          positions: [],
+          lastUpdateTime: now
+        });
+      }
+
+      const history = positionHistoryRef.current.get(index)!;
+      
+      // Remove old entries
+      history.positions = history.positions.filter(
+        (_, i) => i >= history.positions.length - HISTORY_SIZE
+      );
+
+      // Add new position
+      history.positions.push(current);
+      history.lastUpdateTime = now;
+
+      // If we don't have enough history yet, return current position
+      if (history.positions.length < 2) {
         return current;
       }
 
-      const prev = previousPositionsRef.current[index];
+      // Calculate weighted average of positions
+      let weightedX = 0;
+      let weightedY = 0;
+      let totalWeight = 0;
+
+      for (let i = 0; i < history.positions.length; i++) {
+        // More recent positions get higher weights
+        const weight = Math.pow(i / history.positions.length, 2);
+        weightedX += history.positions[i].x * weight;
+        weightedY += history.positions[i].y * weight;
+        totalWeight += weight;
+      }
+
       const smoothed = {
-        x: prev.x + (current.x - prev.x) * SMOOTHING_FACTOR,
-        y: prev.y + (current.y - prev.y) * SMOOTHING_FACTOR
+        x: weightedX / totalWeight,
+        y: weightedY / totalWeight
       };
 
-      previousPositionsRef.current[index] = smoothed;
-      return smoothed;
+      // Apply additional smoothing between current and smoothed position
+      return {
+        x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
+        y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
+      };
     };
 
     const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
@@ -60,9 +102,9 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 2; // Reduced line width
+      ctx.lineWidth = 2;
       ctx.shadowColor = '#000000';
-      ctx.shadowBlur = 1; // Reduced shadow blur
+      ctx.shadowBlur = 1;
 
       const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
       const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]], indices[0]);
@@ -90,7 +132,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       if (landmarks[index]) {
         const { x, y } = transformCoordinate(landmarks[index], arrayIndex);
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, 2 * Math.PI); // Reduced point size
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
         ctx.fill();
       }
     });

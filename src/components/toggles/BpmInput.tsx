@@ -1,5 +1,6 @@
 import React from 'react';
 import { TEXT_SIZES } from '@/constants/typography';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BpmInputProps {
   isDark: boolean;
@@ -14,9 +15,16 @@ export const BpmInput: React.FC<BpmInputProps> = ({
 }) => {
   return (
     <div className="flex items-center justify-between">
-      <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>
-        Target BPM
-      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>
+            Target BPM
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="left" sideOffset={5}>
+          15 Recommended
+        </TooltipContent>
+      </Tooltip>
       <input
         type="number"
         value={targetBPM}

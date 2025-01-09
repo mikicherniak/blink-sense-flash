@@ -18,15 +18,15 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   useEffect(() => {
     let animationFrame: number;
     let startTime: number;
-    const duration = 2000; // Increased to 2 seconds for a longer transition
+    const duration = 1500; // Reduced to 1.5 seconds (25% shorter)
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
       if (isVisible) {
-        // Ease-in cubic bezier for blur-in effect that starts slow and speeds up
-        const eased = progress * progress * progress; // Cubic easing
+        // More aggressive ease-in curve that starts even slower but speeds up more dramatically
+        const eased = progress * progress * progress * progress; // Quartic easing
         setBlurAmount(12 * eased);
       } else {
         // Immediately remove blur when effect ends

@@ -17,9 +17,12 @@ export const VideoDisplay = ({ videoRef, canvasRef, onPlay, setIsLoading, isLoad
         playsInline
         muted
         onPlay={onPlay}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover [transform:rotateY(180deg)]"
       />
-      <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full" />
+      <canvas 
+        ref={canvasRef} 
+        className="absolute top-0 left-0 w-full h-full [transform:rotateY(180deg)]" 
+      />
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white">
           Loading...

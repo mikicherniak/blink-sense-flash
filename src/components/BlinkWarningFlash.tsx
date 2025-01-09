@@ -37,6 +37,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
         backdropFilter: `blur(${blurAmount}px)`,
         WebkitBackdropFilter: `blur(${blurAmount}px)`,
         opacity: blurAmount > 0 ? 1 : 0,
+        transition: blurAmount > 0 ? 'all 3000ms cubic-bezier(0.1, 0.1, 0.7, 1.0)' : 'none'
       }}
     />
   );

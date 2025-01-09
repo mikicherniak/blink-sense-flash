@@ -45,6 +45,8 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
+      // Ensure blur is removed when component unmounts
+      setBlurAmount(0);
     };
   }, [isVisible]);
 

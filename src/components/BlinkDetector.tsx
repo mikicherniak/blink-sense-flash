@@ -7,9 +7,7 @@ import { useBlinkTracking } from '@/hooks/useBlinkTracking';
 import { useCamera } from '@/hooks/useCamera';
 import { useEffectTrigger, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
-import { Moon, Sun, Zap } from 'lucide-react';
-import { DotsIcon } from './icons/DotsIcon';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Header } from './Header';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -79,7 +77,6 @@ export const BlinkDetector = () => {
     return () => clearInterval(cleanup);
   }, []);
 
-  // Effect for low BPM check
   useEffect(() => {
     const checkInterval = setInterval(() => {
       checkBlinkRate();
@@ -92,94 +89,14 @@ export const BlinkDetector = () => {
       <BlinkEffect isVisible={showEffect || showPreview} effect={effectType} isDark={isDark} />
       
       <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-4 sm:px-8">
-        <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col justify-center h-full min-h-[80px]">
-                <div className="flex flex-col justify-center h-full">
-                  <h1 className={`text-4xl sm:text-6xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
-                    Blin<span className="font-black">X</span>
-                  </h1>
-                  <p className={`text-xs leading-tight ${isDark ? 'text-white' : 'text-muted-foreground'}`}>
-                    Protecting your eyes in real-time
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-4 min-w-[200px]">
-              <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={toggleTheme}
-                      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                        isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                          isDark ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      >
-                        {isDark ? (
-                          <Moon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                        ) : (
-                          <Sun className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                        )}
-                      </span>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="text-xs">
-                    {isDark ? 'Dark mode active' : 'Light mode active'}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
-                <Tooltip delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleEffectToggle}
-                      className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                        effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                          effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      >
-                        {effectType === 'flash' ? (
-                          <Zap className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                        ) : (
-                          <DotsIcon className="w-3.5 h-3.5 text-neutral-600 transition-opacity duration-300 opacity-100" />
-                        )}
-                      </span>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="text-xs">
-                    {effectType === 'flash' ? 'Flash effect active' : 'Blur effect active'}
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
-                <input
-                  type="number"
-                  value={targetBPM}
-                  onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-                  className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-primary ${
-                    isDark ? 'text-white bg-neutral-600' : 'text-foreground bg-neutral-300'
-                  }`}
-                  min="1"
-                  max="60"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <Header
+          isDark={isDark}
+          toggleTheme={toggleTheme}
+          effectType={effectType}
+          handleEffectToggle={handleEffectToggle}
+          targetBPM={targetBPM}
+          setTargetBPM={setTargetBPM}
+        />
       </div>
       
       <BlinkStats 

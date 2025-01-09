@@ -25,11 +25,12 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
       if (isVisible) {
-        const eased = progress * progress * progress * progress;
+        // Using a power of 6 for even more dramatic easing
+        const eased = progress * progress * progress * progress * progress * progress;
         setBlurAmount(12 * eased);
       } else {
         setBlurAmount(0);
-        return; // Stop animation immediately when not visible
+        return;
       }
 
       if (progress < 1 && isVisible) {
@@ -41,7 +42,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       startTime = 0;
       animationFrame = requestAnimationFrame(animate);
     } else {
-      setBlurAmount(0); // Immediately set blur to 0 when not visible
+      setBlurAmount(0);
     }
 
     return () => {

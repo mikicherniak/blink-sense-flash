@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { DotsIcon } from '../icons/DotsIcon';
@@ -16,15 +16,24 @@ export const EffectToggle: React.FC<EffectToggleProps> = ({
   effectType,
   handleEffectToggle,
 }) => {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+
+  const handleClick = () => {
+    handleEffectToggle();
+    setIsTooltipOpen(true);
+    // Reset tooltip after a short delay
+    setTimeout(() => setIsTooltipOpen(false), 1500);
+  };
+
   return (
     <div className="flex items-center justify-between">
       <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>
         Effect
       </span>
-      <Tooltip>
+      <Tooltip open={isTooltipOpen}>
         <TooltipTrigger asChild>
           <button
-            onClick={handleEffectToggle}
+            onClick={handleClick}
             className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
               effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
             }`}

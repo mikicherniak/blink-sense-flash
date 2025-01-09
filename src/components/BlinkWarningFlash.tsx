@@ -18,16 +18,15 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   useEffect(() => {
     let animationFrame: number;
     let startTime: number;
-    const duration = 3000; // Increased from 1200 to 3000ms for slower animation
+    const duration = 3000; // 3 seconds for a very slow creep
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
-      if (isVisible) {
-        // Using a power of 6 for even more dramatic easing
+      if (isVisible && effect === 'blur') {
         const eased = progress * progress * progress * progress * progress * progress;
-        setBlurAmount(8 * eased); // Reduced from 12 to 8 for less intense blur
+        setBlurAmount(8 * eased); // Maximum blur of 8px
       } else {
         setBlurAmount(0);
         return;
@@ -38,7 +37,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       }
     };
 
-    if (isVisible) {
+    if (isVisible && effect === 'blur') {
       startTime = 0;
       animationFrame = requestAnimationFrame(animate);
     } else {
@@ -51,7 +50,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       }
       setBlurAmount(0);
     };
-  }, [isVisible]);
+  }, [isVisible, effect]);
 
   if (effect === 'flash') {
     if (!isVisible) return null;
@@ -64,7 +63,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
     <div 
       className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
       style={{ 
-        backdropFilter: blurAmount > 0 ? `blur(${blurAmount}px)` : 'none',
+        backdropFilter: blurAmount > 0 ? `blur(${blurAmount}px)` : undefined,
       }}
     />
   );

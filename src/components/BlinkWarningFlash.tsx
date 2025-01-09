@@ -18,19 +18,18 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   useEffect(() => {
     let animationFrame: number;
     let startTime: number;
-    const duration = 1200; // Reduced to 1.2 seconds
+    const duration = 1200;
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       
       if (isVisible) {
-        // More aggressive ease-in curve that starts even slower but speeds up more dramatically
-        const eased = progress * progress * progress * progress; // Quartic easing
+        const eased = progress * progress * progress * progress;
         setBlurAmount(12 * eased);
       } else {
-        // Immediately remove blur when effect ends
         setBlurAmount(0);
+        return; // Stop animation immediately when not visible
       }
 
       if (progress < 1 && isVisible) {
@@ -38,14 +37,17 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       }
     };
 
-    startTime = 0;
-    animationFrame = requestAnimationFrame(animate);
+    if (isVisible) {
+      startTime = 0;
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      setBlurAmount(0); // Immediately set blur to 0 when not visible
+    }
 
     return () => {
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
-      // Ensure blur is removed when component unmounts
       setBlurAmount(0);
     };
   }, [isVisible]);

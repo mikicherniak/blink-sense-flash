@@ -46,21 +46,31 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const landmarks = results.multiFaceLandmarks[0];
     if (!landmarks) return;
 
-    // Process blink detection
-    BlinkDetectionProcessor({
-      landmarks,
-      onBlink,
-      lastEyeStateRef
-    });
+    return () => {
+      // Cleanup function
+    };
+  }, [results, canvasRef]);
 
-    // Render landmarks
-    LandmarkRenderer({
-      landmarks,
-      canvas,
-      ctx,
-      videoElement
-    });
-  }, [results, canvasRef, onBlink, lastEyeStateRef]);
+  if (!results.multiFaceLandmarks?.length) return null;
 
-  return null;
+  const landmarks = results.multiFaceLandmarks[0];
+  if (!landmarks) return null;
+
+  return (
+    <>
+      <BlinkDetectionProcessor
+        landmarks={landmarks}
+        onBlink={onBlink}
+        lastEyeStateRef={lastEyeStateRef}
+      />
+      {canvasRef.current && canvasContextRef.current && (
+        <LandmarkRenderer
+          landmarks={landmarks}
+          canvas={canvasRef.current}
+          ctx={canvasContextRef.current}
+          videoElement={document.querySelector('video') as HTMLVideoElement}
+        />
+      )}
+    </>
+  );
 };

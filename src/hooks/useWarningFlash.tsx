@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 
 const EFFECT_DELAY = 3000;
-const FLASH_DURATION = 200;
+const FLASH_DURATION = 150; // Reduced from 200ms to 150ms
 const MIN_SESSION_DURATION = 10000;
 
 export type WarningEffect = 'flash' | 'blur';

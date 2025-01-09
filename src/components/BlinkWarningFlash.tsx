@@ -24,6 +24,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
       }, 1000);
       return () => clearTimeout(timer);
     } else {
+      // Immediately set blur to 0 without transition
       setBlurAmount(0);
     }
   }, [isVisible, effect]);
@@ -33,14 +34,14 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
       <div 
         className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
           isDark ? 'bg-neutral-950' : 'bg-white'
-        } opacity-80`} 
+        } opacity-90`} 
       />
     ) : null;
   }
 
   return (
     <div 
-      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen transition-all duration-1000"
+      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
       style={{ 
         backdropFilter: `blur(${blurAmount}px)`,
         WebkitBackdropFilter: `blur(${blurAmount}px)`,

@@ -19,30 +19,32 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
   useEffect(() => {
     if (isVisible && effect === 'blur') {
       setBlurAmount(8);
+      const timer = setTimeout(() => {
+        setBlurAmount(0);
+      }, 1000);
+      return () => clearTimeout(timer);
     } else {
       setBlurAmount(0);
     }
   }, [isVisible, effect]);
 
   if (effect === 'flash') {
-    if (!isVisible) return null;
-    return (
+    return isVisible ? (
       <div 
         className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
           isDark ? 'bg-neutral-950' : 'bg-white'
-        } animate-[flash_200ms_ease-out]`} 
+        } opacity-80`} 
       />
-    );
+    ) : null;
   }
 
   return (
     <div 
-      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
+      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen transition-all duration-1000"
       style={{ 
         backdropFilter: `blur(${blurAmount}px)`,
         WebkitBackdropFilter: `blur(${blurAmount}px)`,
         opacity: blurAmount > 0 ? 1 : 0,
-        transition: blurAmount > 0 ? 'all 3000ms cubic-bezier(0.1, 0.1, 0.7, 1.0)' : 'none'
       }}
     />
   );

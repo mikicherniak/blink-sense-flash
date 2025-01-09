@@ -25,8 +25,8 @@ export const useEffectTrigger = (
     }
 
     const currentBPM = getCurrentBlinksPerMinute();
+    console.log('Checking blink rate:', { currentBPM, targetBPM, showEffect });
     
-    // Only show effect if current BPM is strictly below target
     if (currentBPM < targetBPM) {
       if (!lowBpmStartTime.current) {
         lowBpmStartTime.current = now;
@@ -41,13 +41,10 @@ export const useEffectTrigger = (
         effectTimeoutRef.current = setTimeout(() => {
           setShowEffect(false);
           lowBpmStartTime.current = now;
-        }, effectType === 'flash' ? FLASH_DURATION : 2000);
+        }, effectType === 'flash' ? FLASH_DURATION : 1000);
       }
     } else {
-      // Reset the low BPM timer and hide effect if BPM is equal or above target
-      if (lowBpmStartTime.current) {
-        lowBpmStartTime.current = null;
-      }
+      lowBpmStartTime.current = null;
       if (showEffect) {
         setShowEffect(false);
         if (effectTimeoutRef.current) {

@@ -32,7 +32,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
 
   return (
     <div 
-      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen transition-all duration-1000"
+      className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen"
       style={{ 
         backdropFilter: `blur(${blurAmount}px)`,
         WebkitBackdropFilter: `blur(${blurAmount}px)`,

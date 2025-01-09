@@ -86,15 +86,6 @@ export const BlinkDetector = () => {
     return () => clearInterval(checkInterval);
   }, [blinksInLastMinute, targetBPM]);
 
-  // Effect for very low BPM check
-  useEffect(() => {
-    const criticalCheckInterval = setInterval(() => {
-      checkBlinkRate();
-    }, 5000);
-
-    return () => clearInterval(criticalCheckInterval);
-  }, []);
-
   return (
     <div className="flex flex-col items-center w-full h-full">
       <BlinkEffect isVisible={showEffect || showPreview} effect={effectType} isDark={isDark} />
@@ -117,7 +108,7 @@ export const BlinkDetector = () => {
             
             <div className="flex flex-col gap-4 min-w-[200px]">
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Theme</span>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
                 <button
                   onClick={toggleTheme}
                   className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
@@ -138,7 +129,7 @@ export const BlinkDetector = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Effect</span>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
                 <button
                   onClick={handleEffectToggle}
                   className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
@@ -159,13 +150,13 @@ export const BlinkDetector = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>Target BPM</span>
+                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
                 <input
                   type="number"
                   value={targetBPM}
                   onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
                   className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-primary ${
-                    isDark ? 'text-neutral-400 bg-neutral-600' : 'text-foreground bg-neutral-300'
+                    isDark ? 'text-white bg-neutral-600' : 'text-foreground bg-neutral-300'
                   }`}
                   min="1"
                   max="60"

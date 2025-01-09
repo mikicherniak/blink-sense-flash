@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
         
-        <div className="flex flex-col gap-4 min-w-[200px]">
+        <div className="flex flex-col gap-3 min-w-[200px]">
           <div className="flex items-center justify-between">
             <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
             <Tooltip>

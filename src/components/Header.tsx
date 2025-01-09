@@ -1,8 +1,8 @@
 import React from 'react';
-import { Moon, Sun, Zap } from 'lucide-react';
-import { DotsIcon } from './icons/DotsIcon';
 import { TEXT_SIZES } from '@/constants/typography';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { ThemeToggle } from './toggles/ThemeToggle';
+import { EffectToggle } from './toggles/EffectToggle';
+import { BpmInput } from './toggles/BpmInput';
 import { WarningEffect } from '@/hooks/useWarningFlash';
 
 interface HeaderProps {
@@ -39,75 +39,17 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
         
         <div className="flex flex-col gap-3 min-w-[200px]">
-          <div className="flex items-center justify-between">
-            <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={toggleTheme}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                    isDark ? 'bg-neutral-600' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                      isDark ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  >
-                    {isDark ? (
-                      <Moon className="w-3.5 h-3.5 text-neutral-600" />
-                    ) : (
-                      <Sun className="w-3.5 h-3.5 text-neutral-600" />
-                    )}
-                  </span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="transition-colors duration-75">
-                {isDark ? 'Dark mode' : 'Light mode'}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleEffectToggle}
-                  className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                    effectType === 'flash' ? 'bg-neutral-600' : 'bg-neutral-300'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-300 transform flex items-center justify-center ${
-                      effectType === 'flash' ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  >
-                    {effectType === 'flash' ? (
-                      <Zap className="w-3.5 h-3.5 text-neutral-600" />
-                    ) : (
-                      <DotsIcon className="w-3.5 h-3.5 text-neutral-600" />
-                    )}
-                  </span>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left" className="transition-colors duration-75">
-                {effectType === 'flash' ? 'Flash' : 'Blur'}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className={`${TEXT_SIZES.mobile.controls} sm:${TEXT_SIZES.desktop.controls} ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
-            <input
-              type="number"
-              value={targetBPM}
-              onChange={(e) => setTargetBPM(Math.max(1, parseInt(e.target.value) || 1))}
-              className={`w-[44px] h-6 px-2 text-xs rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-2 focus:ring-primary ${
-                isDark ? 'text-white bg-neutral-600' : 'text-foreground bg-neutral-300'
-              }`}
-              min="1"
-              max="60"
-            />
-          </div>
+          <ThemeToggle isDark={isDark} toggleTheme={toggleTheme} />
+          <EffectToggle 
+            isDark={isDark} 
+            effectType={effectType} 
+            handleEffectToggle={handleEffectToggle} 
+          />
+          <BpmInput 
+            isDark={isDark} 
+            targetBPM={targetBPM} 
+            setTargetBPM={setTargetBPM} 
+          />
         </div>
       </div>
     </div>

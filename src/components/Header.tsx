@@ -91,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
               </TooltipTrigger>
               <TooltipContent side="left" className="transition-colors duration-75">
-                {effectType === 'flash' ? 'Flash effect' : 'Blur effect'}
+                {effectType === 'flash' ? 'Flash' : 'Blur'}
               </TooltipContent>
             </Tooltip>
           </div>

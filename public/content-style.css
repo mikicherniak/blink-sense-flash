@@ -11,6 +11,10 @@
   transition: opacity 0.1s ease-out;
 }
 
+html.dark #blinx-overlay {
+  background: hsl(240 10% 3.9%);
+}
+
 #blinx-overlay.active {
   opacity: 0.8;
 }

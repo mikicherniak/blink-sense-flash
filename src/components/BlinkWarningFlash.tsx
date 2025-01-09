@@ -4,16 +4,17 @@ import { WarningEffect } from '@/hooks/useWarningFlash';
 interface BlinkEffectProps {
   isVisible: boolean;
   effect: WarningEffect;
+  isDark?: boolean;
 }
 
-export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) => {
+export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isDark }) => {
   const [blurAmount, setBlurAmount] = useState(0);
 
   useEffect(() => {
     if (isVisible && effect === 'flash') {
-      window.postMessage({ type: 'BLINX_FLASH' }, '*');
+      window.postMessage({ type: 'BLINX_FLASH', isDark }, '*');
     }
-  }, [isVisible, effect]);
+  }, [isVisible, effect, isDark]);
 
   useEffect(() => {
     if (isVisible && effect === 'blur') {
@@ -26,7 +27,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   if (effect === 'flash') {
     if (!isVisible) return null;
     return (
-      <div className="fixed inset-0 pointer-events-none z-[99999] w-screen h-screen bg-white/80 animate-[flash_200ms_ease-out]" />
+      <div className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${isDark ? 'bg-neutral-950/80' : 'bg-white/80'} animate-[flash_200ms_ease-out]`} />
     );
   }
 

@@ -26,7 +26,7 @@ export const useEffectTrigger = (
 
     const currentBPM = getCurrentBlinksPerMinute();
     
-    // Only show effect if current BPM is below target
+    // Only show effect if current BPM is strictly below target
     if (currentBPM < targetBPM) {
       if (!lowBpmStartTime.current) {
         lowBpmStartTime.current = now;
@@ -44,7 +44,7 @@ export const useEffectTrigger = (
         }, effectType === 'flash' ? FLASH_DURATION : 2000);
       }
     } else {
-      // Reset the low BPM timer and hide effect if BPM is above target
+      // Reset the low BPM timer and hide effect if BPM is equal or above target
       if (lowBpmStartTime.current) {
         lowBpmStartTime.current = null;
       }

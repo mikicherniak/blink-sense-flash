@@ -53,7 +53,7 @@ export const useEffectTrigger = (
           clearTimeout(checkIntervalRef.current);
         }
         scheduleNextCheck();
-      }, effectType === 'flash' ? FLASH_DURATION : 1000);
+      }, effectType === 'flash' ? FLASH_DURATION : 400); // Reduced blur duration from 1000ms to 400ms
     }
   };
 

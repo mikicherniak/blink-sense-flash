@@ -31,7 +31,9 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
       ctx.beginPath();
       ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 4; // Increased line width
+      ctx.shadowColor = '#000000';
+      ctx.shadowBlur = 2;
 
       const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
       const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
@@ -45,12 +47,18 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       ctx.stroke();
     };
 
+    // Clear previous frame
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw landmark points
     ctx.fillStyle = '#00FF00';
+    ctx.shadowColor = '#000000';
+    ctx.shadowBlur = 2;
     [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
       if (landmarks[index]) {
         const { x, y } = transformCoordinate(landmarks[index]);
         ctx.beginPath();
-        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.arc(x, y, 5, 0, 2 * Math.PI); // Increased point size
         ctx.fill();
       }
     });

@@ -25,22 +25,28 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const canvas = canvasRef.current;
       const videoElement = document.querySelector('video');
       if (!canvas || !videoElement) return;
-      setupCanvas(canvas, videoElement, canvasContextRef);
+      
+      // Set canvas dimensions to match video
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      
+      // Get and store the canvas context
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      canvasContextRef.current = ctx;
     };
 
-    return initializeCanvas(canvasRef.current, canvasContextRef, resizeCanvas);
+    // Initial setup
+    resizeCanvas();
+
+    // Add resize listener
+    window.addEventListener('resize', resizeCanvas);
+    
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
   }, [canvasRef]);
-
-  useEffect(() => {
-    if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvasContextRef.current;
-    const videoElement = document.querySelector('video');
-    if (!ctx || !videoElement) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, [results, canvasRef]);
 
   if (!results.multiFaceLandmarks?.length) return null;
 

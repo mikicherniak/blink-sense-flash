@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const EFFECT_DELAY = 3000;
-const FLASH_DURATION = 150; // Reduced from 200ms to 150ms
+const FLASH_DURATION = 100; // Reduced to 100ms for quicker flash
 const MIN_SESSION_DURATION = 10000;
 
 export type WarningEffect = 'flash' | 'blur';
@@ -25,7 +25,13 @@ export const useEffectTrigger = (
     }
 
     const currentBPM = getCurrentBlinksPerMinute();
-    console.log('Checking blink rate:', { currentBPM, targetBPM, showEffect });
+    console.log('Checking blink rate:', { 
+      currentBPM, 
+      targetBPM, 
+      showEffect, 
+      lowBpmStartTime: lowBpmStartTime.current,
+      timeSinceStart: now - (lowBpmStartTime.current || now)
+    });
     
     if (currentBPM < targetBPM) {
       if (!lowBpmStartTime.current) {
@@ -40,7 +46,7 @@ export const useEffectTrigger = (
         
         effectTimeoutRef.current = setTimeout(() => {
           setShowEffect(false);
-          lowBpmStartTime.current = now;
+          lowBpmStartTime.current = now; // Reset the start time after effect
         }, effectType === 'flash' ? FLASH_DURATION : 1000);
       }
     } else {
@@ -53,6 +59,12 @@ export const useEffectTrigger = (
       }
     }
   };
+
+  // Add effect to run checkBlinkRate periodically
+  useEffect(() => {
+    const interval = setInterval(checkBlinkRate, 1000);
+    return () => clearInterval(interval);
+  }, [getCurrentBlinksPerMinute, targetBPM]);
 
   return {
     showEffect,

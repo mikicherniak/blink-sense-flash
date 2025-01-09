@@ -9,6 +9,7 @@ import { useEffectTrigger, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Moon, Sun, Zap } from 'lucide-react';
 import { DotsIcon } from './icons/DotsIcon';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -108,7 +109,14 @@ export const BlinkDetector = () => {
             
             <div className="flex flex-col gap-4 min-w-[200px]">
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Theme</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Switch between light and dark mode</p>
+                  </TooltipContent>
+                </Tooltip>
                 <button
                   onClick={toggleTheme}
                   className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
@@ -129,7 +137,14 @@ export const BlinkDetector = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Effect</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Choose between flash or blur warning effect</p>
+                  </TooltipContent>
+                </Tooltip>
                 <button
                   onClick={handleEffectToggle}
                   className={`relative w-11 h-6 rounded-full transition-colors focus:outline-none ${
@@ -150,7 +165,14 @@ export const BlinkDetector = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between">
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`text-sm ${isDark ? 'text-white' : 'text-foreground'}`}>Target BPM</span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Set your target blinks per minute (recommended: 15-20)</p>
+                  </TooltipContent>
+                </Tooltip>
                 <input
                   type="number"
                   value={targetBPM}

@@ -27,7 +27,11 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect, isD
   if (effect === 'flash') {
     if (!isVisible) return null;
     return (
-      <div className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${isDark ? 'bg-neutral-950/80' : 'bg-white/80'} animate-[flash_200ms_ease-out]`} />
+      <div 
+        className={`fixed inset-0 pointer-events-none z-[99999] w-screen h-screen ${
+          isDark ? 'bg-neutral-950/30' : 'bg-white/50'
+        } animate-[flash_200ms_ease-out]`} 
+      />
     );
   }
 

@@ -16,5 +16,9 @@ html.dark #blinx-overlay {
 }
 
 #blinx-overlay.active {
-  opacity: 0.8;
+  opacity: 0.5;
+}
+
+html.dark #blinx-overlay.active {
+  opacity: 0.3;
 }

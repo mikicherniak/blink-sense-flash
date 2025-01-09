@@ -16,6 +16,8 @@ interface Point {
 interface PositionHistory {
   positions: Point[];
   lastUpdateTime: number;
+  isBlinking: boolean;
+  blinkStartTime: number;
 }
 
 export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
@@ -24,8 +26,8 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   ctx,
   videoElement,
 }) => {
-  // Keep track of position history for each point
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
+  const BLINK_ANIMATION_DURATION = 1000; // Duration in ms for the X to linger
   
   useEffect(() => {
     const scaleX = canvas.width / videoElement.videoWidth;
@@ -33,41 +35,32 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
     const smoothPosition = (current: Point, index: number): Point => {
       const now = Date.now();
-      const HISTORY_SIZE = 10; // Increased history size
-      const MAX_HISTORY_AGE = 500; // Maximum age of history entries in ms
-      const SMOOTHING_FACTOR = 0.3; // Reduced smoothing factor for more stability
+      const HISTORY_SIZE = 10;
+      const SMOOTHING_FACTOR = 0.3;
       
-      // Initialize history for this point if it doesn't exist
       if (!positionHistoryRef.current.has(index)) {
         positionHistoryRef.current.set(index, {
           positions: [],
-          lastUpdateTime: now
+          lastUpdateTime: now,
+          isBlinking: false,
+          blinkStartTime: 0
         });
       }
 
       const history = positionHistoryRef.current.get(index)!;
-      
-      // Remove old entries
       history.positions = history.positions.filter(
         (_, i) => i >= history.positions.length - HISTORY_SIZE
       );
-
-      // Add new position
       history.positions.push(current);
       history.lastUpdateTime = now;
 
-      // If we don't have enough history yet, return current position
-      if (history.positions.length < 2) {
-        return current;
-      }
+      if (history.positions.length < 2) return current;
 
-      // Calculate weighted average of positions
       let weightedX = 0;
       let weightedY = 0;
       let totalWeight = 0;
 
       for (let i = 0; i < history.positions.length; i++) {
-        // More recent positions get higher weights
         const weight = Math.pow(i / history.positions.length, 2);
         weightedX += history.positions[i].x * weight;
         weightedY += history.positions[i].y * weight;
@@ -79,7 +72,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
         y: weightedY / totalWeight
       };
 
-      // Apply additional smoothing between current and smoothed position
       return {
         x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
         y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
@@ -94,52 +86,107 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       return smoothPosition(rawPoint, index);
     };
 
-    const drawEyeOutline = (indices: number[]) => {
-      if (!indices.every(i => landmarks[i])) {
-        console.warn('Missing landmarks for eye outline');
-        return;
+    const drawEye = (indices: number[], isLeft: boolean) => {
+      if (!indices.every(i => landmarks[i])) return;
+
+      // Calculate eye center and size
+      const topPoint = transformCoordinate(landmarks[indices[1]], indices[1]);
+      const bottomPoint = transformCoordinate(landmarks[indices[3]], indices[3]);
+      const leftPoint = transformCoordinate(landmarks[indices[0]], indices[0]);
+      const rightPoint = transformCoordinate(landmarks[indices[2]], indices[2]);
+
+      const centerX = (leftPoint.x + rightPoint.x) / 2;
+      const centerY = (topPoint.y + bottomPoint.y) / 2;
+      const eyeWidth = Math.abs(rightPoint.x - leftPoint.x);
+      const eyeHeight = Math.abs(bottomPoint.y - topPoint.y) * 1.2;
+
+      const history = positionHistoryRef.current.get(indices[0]);
+      const now = Date.now();
+      const isBlinking = history?.isBlinking && 
+                        (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION;
+
+      if (isBlinking) {
+        // Draw X when blinking
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX - eyeWidth/2, centerY - eyeHeight/2);
+        ctx.lineTo(centerX + eyeWidth/2, centerY + eyeHeight/2);
+        ctx.moveTo(centerX + eyeWidth/2, centerY - eyeHeight/2);
+        ctx.lineTo(centerX - eyeWidth/2, centerY + eyeHeight/2);
+        ctx.stroke();
+      } else {
+        // Draw eye
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+        // Draw eye shape (oval)
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, eyeWidth/2, eyeHeight/2, 0, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw iris
+        const irisSize = Math.min(eyeWidth, eyeHeight) * 0.4;
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, irisSize, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Add catchlight
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(centerX + irisSize/4, centerY - irisSize/4, irisSize/4, 0, 2 * Math.PI);
+        ctx.fill();
       }
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 2;
-      ctx.shadowColor = '#000000';
-      ctx.shadowBlur = 1;
-
-      const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
-      const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]], indices[0]);
-      ctx.moveTo(firstPoint.x, firstPoint.y);
-
-      for (let i = 1; i < connectionOrder.length; i++) {
-        const point = transformCoordinate(
-          landmarks[indices[connectionOrder[i]]], 
-          indices[connectionOrder[i]]
-        );
-        ctx.lineTo(point.x, point.y);
-      }
-
-      ctx.stroke();
     };
 
     // Clear previous frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw landmark points
-    ctx.fillStyle = '#00FF00';
-    ctx.shadowColor = '#000000';
-    ctx.shadowBlur = 1;
-    [...LEFT_EYE, ...RIGHT_EYE].forEach((index, arrayIndex) => {
-      if (landmarks[index]) {
-        const { x, y } = transformCoordinate(landmarks[index], arrayIndex);
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, 2 * Math.PI);
-        ctx.fill();
+    // Check for blinks
+    const leftEyeHistory = positionHistoryRef.current.get(LEFT_EYE[0]);
+    const rightEyeHistory = positionHistoryRef.current.get(RIGHT_EYE[0]);
+    
+    if (leftEyeHistory && rightEyeHistory) {
+      const avgEAR = calculateAverageEAR();
+      const now = Date.now();
+      
+      if (avgEAR < 0.45 && !leftEyeHistory.isBlinking) {
+        leftEyeHistory.isBlinking = true;
+        rightEyeHistory.isBlinking = true;
+        leftEyeHistory.blinkStartTime = now;
+        rightEyeHistory.blinkStartTime = now;
+      } else if (avgEAR >= 0.45 && now - leftEyeHistory.blinkStartTime >= BLINK_ANIMATION_DURATION) {
+        leftEyeHistory.isBlinking = false;
+        rightEyeHistory.isBlinking = false;
       }
-    });
+    }
 
-    drawEyeOutline(LEFT_EYE);
-    drawEyeOutline(RIGHT_EYE);
+    // Draw the eyes
+    drawEye(LEFT_EYE, true);
+    drawEye(RIGHT_EYE, false);
   }, [landmarks, canvas, ctx, videoElement]);
+
+  const calculateAverageEAR = () => {
+    // Simple helper to estimate if eyes are closed based on vertical/horizontal ratio
+    const getEyeRatio = (indices: number[]) => {
+      const top = landmarks[indices[1]];
+      const bottom = landmarks[indices[3]];
+      const left = landmarks[indices[0]];
+      const right = landmarks[indices[2]];
+      
+      const height = Math.abs(top.y - bottom.y);
+      const width = Math.abs(left.x - right.x);
+      
+      return height / width;
+    };
+
+    const leftEAR = getEyeRatio(LEFT_EYE);
+    const rightEAR = getEyeRatio(RIGHT_EYE);
+    return (leftEAR + rightEAR) / 2;
+  };
 
   return null;
 };

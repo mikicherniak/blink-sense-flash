@@ -102,12 +102,12 @@ export const BlinkDetector = () => {
       <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 z-10 w-full max-w-4xl px-4 sm:px-8">
         <div className={`${isDark ? 'bg-neutral-800/80' : 'bg-background/30'} backdrop-blur-sm rounded-lg p-4 border ${isDark ? 'border-neutral-700/40' : 'border-muted/40'}`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-0">
-            <div className="flex flex-col">
+            <div className="flex items-center gap-3">
               <h1 className={`text-4xl sm:text-6xl font-extrabold ${isDark ? 'text-neutral-100' : 'text-foreground'}`}>
                 Blin<span className="font-black">X</span>
               </h1>
-              <p className={`text-sm mt-2 ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>
-                Adjusting your blink rate in real-time to protect your eyes
+              <p className={`text-xs sm:text-sm mt-0 ${isDark ? 'text-neutral-400' : 'text-foreground'}`}>
+                Adjusting your blink rate<br />in real-time to protect your eyes
               </p>
             </div>
             <div className="flex flex-col gap-4 min-w-[200px]">

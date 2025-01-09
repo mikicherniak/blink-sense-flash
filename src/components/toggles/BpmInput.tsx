@@ -32,7 +32,7 @@ export const BpmInput: React.FC<BpmInputProps> = ({
           />
         </TooltipTrigger>
         <TooltipContent side="left" sideOffset={5}>
-          15 Recommended
+          Healthy = 15-20
         </TooltipContent>
       </Tooltip>
     </div>

@@ -18,7 +18,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
   useEffect(() => {
     let animationFrame: number;
     let startTime: number;
-    const duration = 1200;
+    const duration = 3000; // Increased from 1200 to 3000ms for slower animation
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -27,7 +27,7 @@ export const BlinkEffect: React.FC<BlinkEffectProps> = ({ isVisible, effect }) =
       if (isVisible) {
         // Using a power of 6 for even more dramatic easing
         const eased = progress * progress * progress * progress * progress * progress;
-        setBlurAmount(12 * eased);
+        setBlurAmount(8 * eased); // Reduced from 12 to 8 for less intense blur
       } else {
         setBlurAmount(0);
         return;

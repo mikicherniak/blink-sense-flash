@@ -7,21 +7,24 @@ export const calculateScaleFactors = (
   const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
   const canvasAspect = canvas.width / canvas.height;
   
-  let scale: number;
+  let scaleX: number;
+  let scaleY: number;
   let offsetX = 0;
   let offsetY = 0;
   
   if (videoAspect > canvasAspect) {
     // Video is wider than canvas
-    scale = canvas.height / videoElement.videoHeight;
-    offsetX = (canvas.width - (videoElement.videoWidth * scale)) / 2;
+    scaleY = canvas.height / videoElement.videoHeight;
+    scaleX = scaleY; // Keep aspect ratio
+    offsetX = (canvas.width - (videoElement.videoWidth * scaleX)) / 2;
   } else {
     // Video is taller than canvas
-    scale = canvas.width / videoElement.videoWidth;
-    offsetY = (canvas.height - (videoElement.videoHeight * scale)) / 2;
+    scaleX = canvas.width / videoElement.videoWidth;
+    scaleY = scaleX; // Keep aspect ratio
+    offsetY = (canvas.height - (videoElement.videoHeight * scaleY)) / 2;
   }
   
-  return { scaleX: scale, scaleY: scale, offsetX, offsetY };
+  return { scaleX, scaleY, offsetX, offsetY };
 };
 
 export const transformCoordinate = (
@@ -35,6 +38,7 @@ export const transformCoordinate = (
   const rawX = point.x * videoElement.videoWidth;
   const rawY = point.y * videoElement.videoHeight;
   
+  // Apply scaling and offset
   return {
     x: (rawX * scaleX) + offsetX,
     y: (rawY * scaleY) + offsetY

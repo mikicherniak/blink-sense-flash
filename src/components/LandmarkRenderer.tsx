@@ -27,12 +27,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   videoElement,
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
-  // Increased from 1000ms to 1500ms to make the X linger longer
   const BLINK_ANIMATION_DURATION = 1500;
-  
-  // Calculate scale at component level
-  const scaleX = canvas.width / videoElement.videoWidth;
-  const scaleY = canvas.height / videoElement.videoHeight;
 
   const smoothPosition = (current: Point, index: number): Point => {
     const now = Date.now();
@@ -80,6 +75,10 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   };
 
   const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+    // Calculate scale inside the transform function to ensure we have current dimensions
+    const scaleX = canvas.width / videoElement.videoWidth;
+    const scaleY = canvas.height / videoElement.videoHeight;
+    
     const rawPoint = {
       x: point.x * videoElement.videoWidth * scaleX,
       y: point.y * videoElement.videoHeight * scaleY

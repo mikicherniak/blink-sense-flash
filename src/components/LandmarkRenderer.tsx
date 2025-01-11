@@ -28,12 +28,17 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
   const BLINK_ANIMATION_DURATION = 1000;
+  const scaleFactorsRef = useRef({ x: 1, y: 1 });
   
+  // Update scale factors whenever canvas or video dimensions change
   useEffect(() => {
-    // Calculate scale factors at the start of the effect
-    const scaleX = canvas.width / videoElement.videoWidth;
-    const scaleY = canvas.height / videoElement.videoHeight;
+    scaleFactorsRef.current = {
+      x: canvas.width / videoElement.videoWidth,
+      y: canvas.height / videoElement.videoHeight
+    };
+  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
 
+  useEffect(() => {
     const smoothPosition = (current: Point, index: number): Point => {
       const now = Date.now();
       const HISTORY_SIZE = 10;
@@ -81,8 +86,8 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
     const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
       const rawPoint = {
-        x: point.x * videoElement.videoWidth * scaleX,
-        y: point.y * videoElement.videoHeight * scaleY
+        x: point.x * videoElement.videoWidth * scaleFactorsRef.current.x,
+        y: point.y * videoElement.videoHeight * scaleFactorsRef.current.y
       };
       return smoothPosition(rawPoint, index);
     };
@@ -90,7 +95,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
     const drawEye = (indices: number[], isLeft: boolean) => {
       if (!indices.every(i => landmarks[i])) return;
 
-      // Calculate eye center and size
       const topPoint = transformCoordinate(landmarks[indices[1]], indices[1]);
       const bottomPoint = transformCoordinate(landmarks[indices[3]], indices[3]);
       const leftPoint = transformCoordinate(landmarks[indices[0]], indices[0]);
@@ -104,12 +108,10 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const history = positionHistoryRef.current.get(indices[0]);
       const now = Date.now();
       
-      // Only show X during the actual counted blink animation
       const isBlinking = history?.isBlinking && 
                         (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION;
 
       if (isBlinking) {
-        // Draw X when blinking
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -119,25 +121,21 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
         ctx.lineTo(centerX - eyeWidth/2, centerY + eyeHeight/2);
         ctx.stroke();
       } else {
-        // Draw eye
         ctx.fillStyle = 'white';
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
 
-        // Draw eye shape (oval)
         ctx.beginPath();
         ctx.ellipse(centerX, centerY, eyeWidth/2, eyeHeight/2, 0, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
 
-        // Draw iris
         const irisSize = Math.min(eyeWidth, eyeHeight) * 0.4;
         ctx.fillStyle = 'black';
         ctx.beginPath();
         ctx.arc(centerX, centerY, irisSize, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Add catchlight
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.arc(centerX + irisSize/4, centerY - irisSize/4, irisSize/4, 0, 2 * Math.PI);
@@ -145,10 +143,8 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       }
     };
 
-    // Clear previous frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Check for blinks
     const leftEyeHistory = positionHistoryRef.current.get(LEFT_EYE[0]);
     const rightEyeHistory = positionHistoryRef.current.get(RIGHT_EYE[0]);
     
@@ -172,7 +168,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       }
     }
 
-    // Draw the eyes
     drawEye(LEFT_EYE, true);
     drawEye(RIGHT_EYE, false);
   }, [landmarks, canvas, ctx, videoElement]);

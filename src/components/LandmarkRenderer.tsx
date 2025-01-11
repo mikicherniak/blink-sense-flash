@@ -75,25 +75,33 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   };
 
   const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-    // First convert the normalized coordinates to video dimensions
-    const videoX = point.x * videoElement.videoWidth;
-    const videoY = point.y * videoElement.videoHeight;
-    
-    // Then scale to canvas dimensions
+    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') {
+      console.warn('Invalid point received:', point);
+      return { x: 0, y: 0 };
+    }
+
+    // Get current dimensions
     const scaleX = canvas.width / videoElement.videoWidth;
     const scaleY = canvas.height / videoElement.videoHeight;
-    
+
+    // Transform coordinates
+    const x = point.x * videoElement.videoWidth;
+    const y = point.y * videoElement.videoHeight;
+
     const rawPoint = {
-      x: videoX * scaleX,
-      y: videoY * scaleY
+      x: x * scaleX,
+      y: y * scaleY
     };
-    
+
     return smoothPosition(rawPoint, index);
   };
 
   useEffect(() => {
     const drawEye = (indices: number[], isLeft: boolean) => {
-      if (!indices.every(i => landmarks[i])) return;
+      if (!indices.every(i => landmarks[i])) {
+        console.warn('Missing landmark indices for eye:', isLeft ? 'left' : 'right');
+        return;
+      }
 
       // Calculate eye center and size
       const topPoint = transformCoordinate(landmarks[indices[1]], indices[1]);
@@ -161,7 +169,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const avgEAR = calculateAverageEAR();
       const now = Date.now();
       
-      // Only start blink animation when we detect a full blink sequence
       const CONSECUTIVE_FRAMES_THRESHOLD = 2;
       const MIN_TIME_BETWEEN_BLINKS = 200;
       const timeSinceLastBlink = now - leftEyeHistory.blinkStartTime;
@@ -173,7 +180,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
         leftEyeHistory.blinkStartTime = now;
         rightEyeHistory.blinkStartTime = now;
       } else if (avgEAR >= 0.45) {
-        // Reset blink state when eyes are open
         leftEyeHistory.isBlinking = false;
         rightEyeHistory.isBlinking = false;
       }
@@ -185,12 +191,13 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   }, [landmarks, canvas, ctx, videoElement]);
 
   const calculateAverageEAR = () => {
-    // Simple helper to estimate if eyes are closed based on vertical/horizontal ratio
     const getEyeRatio = (indices: number[]) => {
       const top = landmarks[indices[1]];
       const bottom = landmarks[indices[3]];
       const left = landmarks[indices[0]];
       const right = landmarks[indices[2]];
+      
+      if (!top || !bottom || !left || !right) return 1.0;
       
       const height = Math.abs(top.y - bottom.y);
       const width = Math.abs(left.x - right.x);

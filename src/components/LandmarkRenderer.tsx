@@ -80,17 +80,35 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       return { x: 0, y: 0 };
     }
 
-    // Get current dimensions
-    const scaleX = canvas.width / videoElement.videoWidth;
-    const scaleY = canvas.height / videoElement.videoHeight;
+    // Get the actual dimensions
+    const videoWidth = videoElement.videoWidth;
+    const videoHeight = videoElement.videoHeight;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // Calculate aspect ratios
+    const videoAspect = videoWidth / videoHeight;
+    const canvasAspect = canvasWidth / canvasHeight;
+
+    // Calculate scaling factors and offsets
+    let scaleX, scaleY, offsetX = 0, offsetY = 0;
+    
+    if (canvasAspect > videoAspect) {
+      // Canvas is wider than video
+      scaleY = canvasHeight / videoHeight;
+      scaleX = scaleY;
+      offsetX = (canvasWidth - (videoWidth * scaleX)) / 2;
+    } else {
+      // Canvas is taller than video
+      scaleX = canvasWidth / videoWidth;
+      scaleY = scaleX;
+      offsetY = (canvasHeight - (videoHeight * scaleY)) / 2;
+    }
 
     // Transform coordinates
-    const x = point.x * videoElement.videoWidth;
-    const y = point.y * videoElement.videoHeight;
-
     const rawPoint = {
-      x: x * scaleX,
-      y: y * scaleY
+      x: (point.x * videoWidth * scaleX) + offsetX,
+      y: (point.y * videoHeight * scaleY) + offsetY
     };
 
     return smoothPosition(rawPoint, index);

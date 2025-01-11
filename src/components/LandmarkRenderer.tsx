@@ -27,9 +27,12 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   videoElement,
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
-  // Increased from 1000ms to 1500ms to make the X linger longer
-  const BLINK_ANIMATION_DURATION = 1500;
+  const BLINK_ANIMATION_DURATION = 1000; // Duration in ms for the X to linger
   
+  useEffect(() => {
+    const scaleX = canvas.width / videoElement.videoWidth;
+    const scaleY = canvas.height / videoElement.videoHeight;
+
     const smoothPosition = (current: Point, index: number): Point => {
       const now = Date.now();
       const HISTORY_SIZE = 10;
@@ -82,10 +85,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       };
       return smoothPosition(rawPoint, index);
     };
-
-  useEffect(() => {
-    const scaleX = canvas.width / videoElement.videoWidth;
-    const scaleY = canvas.height / videoElement.videoHeight;
 
     const drawEye = (indices: number[], isLeft: boolean) => {
       if (!indices.every(i => landmarks[i])) return;

@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
                     side="right" 
                     className={`${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-background border-border'}`}
                   >
-                    Reset all stats
+                    Reset
                   </TooltipContent>
                 </Tooltip>
               </div>

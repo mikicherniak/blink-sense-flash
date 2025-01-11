@@ -30,63 +30,64 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   // Increased from 1000ms to 1500ms to make the X linger longer
   const BLINK_ANIMATION_DURATION = 1500;
   
-    const smoothPosition = (current: Point, index: number): Point => {
-      const now = Date.now();
-      const HISTORY_SIZE = 10;
-      const SMOOTHING_FACTOR = 0.3;
-      
-      if (!positionHistoryRef.current.has(index)) {
-        positionHistoryRef.current.set(index, {
-          positions: [],
-          lastUpdateTime: now,
-          isBlinking: false,
-          blinkStartTime: 0
-        });
-      }
+  // Calculate scale at component level
+  const scaleX = canvas.width / videoElement.videoWidth;
+  const scaleY = canvas.height / videoElement.videoHeight;
 
-      const history = positionHistoryRef.current.get(index)!;
-      history.positions = history.positions.filter(
-        (_, i) => i >= history.positions.length - HISTORY_SIZE
-      );
-      history.positions.push(current);
-      history.lastUpdateTime = now;
+  const smoothPosition = (current: Point, index: number): Point => {
+    const now = Date.now();
+    const HISTORY_SIZE = 10;
+    const SMOOTHING_FACTOR = 0.3;
+    
+    if (!positionHistoryRef.current.has(index)) {
+      positionHistoryRef.current.set(index, {
+        positions: [],
+        lastUpdateTime: now,
+        isBlinking: false,
+        blinkStartTime: 0
+      });
+    }
 
-      if (history.positions.length < 2) return current;
+    const history = positionHistoryRef.current.get(index)!;
+    history.positions = history.positions.filter(
+      (_, i) => i >= history.positions.length - HISTORY_SIZE
+    );
+    history.positions.push(current);
+    history.lastUpdateTime = now;
 
-      let weightedX = 0;
-      let weightedY = 0;
-      let totalWeight = 0;
+    if (history.positions.length < 2) return current;
 
-      for (let i = 0; i < history.positions.length; i++) {
-        const weight = Math.pow(i / history.positions.length, 2);
-        weightedX += history.positions[i].x * weight;
-        weightedY += history.positions[i].y * weight;
-        totalWeight += weight;
-      }
+    let weightedX = 0;
+    let weightedY = 0;
+    let totalWeight = 0;
 
-      const smoothed = {
-        x: weightedX / totalWeight,
-        y: weightedY / totalWeight
-      };
+    for (let i = 0; i < history.positions.length; i++) {
+      const weight = Math.pow(i / history.positions.length, 2);
+      weightedX += history.positions[i].x * weight;
+      weightedY += history.positions[i].y * weight;
+      totalWeight += weight;
+    }
 
-      return {
-        x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
-        y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
-      };
+    const smoothed = {
+      x: weightedX / totalWeight,
+      y: weightedY / totalWeight
     };
 
-    const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-      const rawPoint = {
-        x: point.x * videoElement.videoWidth * scaleX,
-        y: point.y * videoElement.videoHeight * scaleY
-      };
-      return smoothPosition(rawPoint, index);
+    return {
+      x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
+      y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
     };
+  };
+
+  const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+    const rawPoint = {
+      x: point.x * videoElement.videoWidth * scaleX,
+      y: point.y * videoElement.videoHeight * scaleY
+    };
+    return smoothPosition(rawPoint, index);
+  };
 
   useEffect(() => {
-    const scaleX = canvas.width / videoElement.videoWidth;
-    const scaleY = canvas.height / videoElement.videoHeight;
-
     const drawEye = (indices: number[], isLeft: boolean) => {
       if (!indices.every(i => landmarks[i])) return;
 

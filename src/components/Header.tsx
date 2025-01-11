@@ -49,8 +49,8 @@ export const Header: React.FC<HeaderProps> = ({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent 
-                    side="right" 
-                    className={`${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-background border-border'}`}
+                    side="right"
+                    className={`${isDark ? 'bg-neutral-800 text-white' : 'bg-white text-foreground'} border-border`}
                   >
                     Reset
                   </TooltipContent>

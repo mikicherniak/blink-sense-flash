@@ -8,6 +8,7 @@ import { useCamera } from '@/hooks/useCamera';
 import { useEffectTrigger, WarningEffect } from '@/hooks/useWarningFlash';
 import { useTheme } from '@/hooks/useTheme';
 import { Header } from './Header';
+import { toast } from 'sonner';
 
 export const BlinkDetector = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -23,7 +24,8 @@ export const BlinkDetector = () => {
     getCurrentBlinksPerMinute,
     getAverageBlinksPerMinute,
     getSessionDuration,
-    handleBlink
+    handleBlink,
+    resetStats
   } = useBlinkTracking();
 
   const {
@@ -35,7 +37,8 @@ export const BlinkDetector = () => {
     canvasRef,
     setupFaceMesh,
     setupCamera,
-    processVideo
+    processVideo,
+    resetCamera
   } = useCamera();
 
   const {
@@ -48,6 +51,16 @@ export const BlinkDetector = () => {
     setEffectType(newEffect);
     setShowPreview(true);
     setTimeout(() => setShowPreview(false), newEffect === 'flash' ? 200 : 1000);
+  };
+
+  const handleReset = async () => {
+    setIsLoading(true);
+    resetStats();
+    await resetCamera();
+    await setupFaceMesh();
+    await setupCamera();
+    setIsLoading(false);
+    toast.success('Application reset successfully');
   };
 
   useEffect(() => {
@@ -89,6 +102,7 @@ export const BlinkDetector = () => {
           handleEffectToggle={handleEffectToggle}
           targetBPM={targetBPM}
           setTargetBPM={setTargetBPM}
+          onReset={handleReset}
         />
       </div>
       

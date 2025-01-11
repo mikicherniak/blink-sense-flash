@@ -36,14 +36,12 @@ export const useCamera = () => {
 
   const setupCamera = async () => {
     try {
-      // Improved camera constraints for better face detection
       const constraints = {
         video: {
-          width: { ideal: 1280 }, // Increased resolution
+          width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: 'user',
-          frameRate: { ideal: 60, min: 30 }, // Higher frame rate
-          // Additional camera settings for better quality
+          frameRate: { ideal: 60, min: 30 },
           brightness: { ideal: 100 },
           contrast: { ideal: 100 },
           exposureMode: 'continuous',
@@ -60,7 +58,6 @@ export const useCamera = () => {
         videoRef.current.srcObject = stream;
         videoRef.current.playsInline = true;
         
-        // Wait for video to be properly initialized
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadeddata = resolve;
@@ -69,7 +66,6 @@ export const useCamera = () => {
         
         await videoRef.current.play();
         
-        // Log the actual frame rate we got
         const videoTrack = stream.getVideoTracks()[0];
         const settings = videoTrack.getSettings();
         console.log('Actual camera settings:', settings);
@@ -95,6 +91,18 @@ export const useCamera = () => {
     }
   };
 
+  const resetCamera = async () => {
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+    }
+    setFaceMeshResults(null);
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  };
+
   return {
     isLoading,
     setIsLoading,
@@ -105,6 +113,7 @@ export const useCamera = () => {
     faceMeshRef,
     setupFaceMesh,
     setupCamera,
-    processVideo
+    processVideo,
+    resetCamera
   };
 };

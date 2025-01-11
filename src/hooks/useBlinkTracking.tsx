@@ -4,7 +4,7 @@ export const useBlinkTracking = () => {
   const [blinksInLastMinute, setBlinksInLastMinute] = useState<number[]>([]);
   const [lastBlinkTime, setLastBlinkTime] = useState(0);
   const [totalBlinks, setTotalBlinks] = useState(0);
-  const [monitoringStartTime] = useState(Date.now());
+  const [monitoringStartTime, setMonitoringStartTime] = useState(Date.now());
   const lastEyeStateRef = useRef<'open' | 'closed'>('open');
 
   const getCurrentBlinksPerMinute = useCallback(() => {
@@ -36,6 +36,14 @@ export const useBlinkTracking = () => {
     console.log('Blink detected! Total blinks:', totalBlinks + 1);
   }, [totalBlinks]);
 
+  const resetStats = useCallback(() => {
+    setBlinksInLastMinute([]);
+    setLastBlinkTime(0);
+    setTotalBlinks(0);
+    setMonitoringStartTime(Date.now());
+    lastEyeStateRef.current = 'open';
+  }, []);
+
   return {
     blinksInLastMinute,
     setBlinksInLastMinute,
@@ -46,6 +54,7 @@ export const useBlinkTracking = () => {
     getCurrentBlinksPerMinute,
     getAverageBlinksPerMinute,
     getSessionDuration,
-    handleBlink
+    handleBlink,
+    resetStats
   };
 };

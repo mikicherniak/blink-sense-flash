@@ -30,34 +30,48 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   const BLINK_ANIMATION_DURATION = 1000;
   const scaleFactorsRef = useRef({ x: 1, y: 1, offsetX: 0, offsetY: 0 });
 
-  const calculateAverageEAR = () => {
-    const getEyeRatio = (indices: number[]) => {
-      const top = landmarks[indices[1]];
-      const bottom = landmarks[indices[3]];
-      const left = landmarks[indices[0]];
-      const right = landmarks[indices[2]];
+  useEffect(() => {
+    const updateScaleFactors = () => {
+      const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
+      const canvasAspect = canvas.width / canvas.height;
       
-      const height = Math.abs(top.y - bottom.y);
-      const width = Math.abs(left.x - right.x);
+      let scale: number;
+      let offsetX = 0;
+      let offsetY = 0;
       
-      return height / width;
+      if (videoAspect > canvasAspect) {
+        scale = canvas.width / videoElement.videoWidth;
+        offsetY = (canvas.height - (videoElement.videoHeight * scale)) / 2;
+      } else {
+        scale = canvas.height / videoElement.videoHeight;
+        offsetX = (canvas.width - (videoElement.videoWidth * scale)) / 2;
+      }
+      
+      scaleFactorsRef.current = {
+        x: scale,
+        y: scale,
+        offsetX,
+        offsetY
+      };
     };
 
-    const leftEAR = getEyeRatio(LEFT_EYE);
-    const rightEAR = getEyeRatio(RIGHT_EYE);
-    return (leftEAR + rightEAR) / 2;
-  };
+    updateScaleFactors();
+  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
 
   const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-    const { x: scale, y: scaleY, offsetX, offsetY } = scaleFactorsRef.current;
+    const { x: scaleX, y: scaleY, offsetX, offsetY } = scaleFactorsRef.current;
     
+    // Convert normalized coordinates (0-1) to actual pixel values
     const rawX = point.x * videoElement.videoWidth;
     const rawY = point.y * videoElement.videoHeight;
     
-    return smoothPosition({
-      x: (rawX * scale) + offsetX,
+    // Apply scaling and offset while maintaining aspect ratio
+    const transformedPoint = {
+      x: (rawX * scaleX) + offsetX,
       y: (rawY * scaleY) + offsetY
-    }, index);
+    };
+    
+    return smoothPosition(transformedPoint, index);
   };
 
   const smoothPosition = (current: Point, index: number): Point => {
@@ -75,9 +89,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
     }
 
     const history = positionHistoryRef.current.get(index)!;
-    history.positions = history.positions.filter(
-      (_, i) => i >= history.positions.length - HISTORY_SIZE
-    );
+    history.positions = history.positions.slice(-HISTORY_SIZE);
     history.positions.push(current);
     history.lastUpdateTime = now;
 
@@ -87,12 +99,12 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
     let weightedY = 0;
     let totalWeight = 0;
 
-    for (let i = 0; i < history.positions.length; i++) {
-      const weight = Math.pow(i / history.positions.length, 2);
-      weightedX += history.positions[i].x * weight;
-      weightedY += history.positions[i].y * weight;
+    history.positions.forEach((pos, i) => {
+      const weight = Math.pow((i + 1) / history.positions.length, 2);
+      weightedX += pos.x * weight;
+      weightedY += pos.y * weight;
       totalWeight += weight;
-    }
+    });
 
     const smoothed = {
       x: weightedX / totalWeight,
@@ -157,34 +169,6 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   };
 
   useEffect(() => {
-    const updateScaleFactors = () => {
-      const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
-      const canvasAspect = canvas.width / canvas.height;
-      
-      let scale: number;
-      let offsetX = 0;
-      let offsetY = 0;
-      
-      if (videoAspect > canvasAspect) {
-        scale = canvas.height / videoElement.videoHeight;
-        offsetX = (canvas.width - (videoElement.videoWidth * scale)) / 2;
-      } else {
-        scale = canvas.width / videoElement.videoWidth;
-        offsetY = (canvas.height - (videoElement.videoHeight * scale)) / 2;
-      }
-      
-      scaleFactorsRef.current = {
-        x: scale,
-        y: scale,
-        offsetX,
-        offsetY
-      };
-    };
-
-    updateScaleFactors();
-  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
-
-  useEffect(() => {
     if (!landmarks || !canvas || !ctx || !videoElement) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -214,6 +198,24 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
     drawEye(LEFT_EYE, true);
     drawEye(RIGHT_EYE, false);
   }, [landmarks, canvas, ctx, videoElement]);
+
+  const calculateAverageEAR = () => {
+    const getEyeRatio = (indices: number[]) => {
+      const top = landmarks[indices[1]];
+      const bottom = landmarks[indices[3]];
+      const left = landmarks[indices[0]];
+      const right = landmarks[indices[2]];
+      
+      const height = Math.abs(top.y - bottom.y);
+      const width = Math.abs(left.x - right.x);
+      
+      return height / width;
+    };
+
+    const leftEAR = getEyeRatio(LEFT_EYE);
+    const rightEAR = getEyeRatio(RIGHT_EYE);
+    return (leftEAR + rightEAR) / 2;
+  };
 
   return null;
 };

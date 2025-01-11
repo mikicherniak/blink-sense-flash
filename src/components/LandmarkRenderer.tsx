@@ -32,10 +32,25 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   
   // Update scale factors whenever canvas or video dimensions change
   useEffect(() => {
-    scaleFactorsRef.current = {
-      x: canvas.width / videoElement.videoWidth,
-      y: canvas.height / videoElement.videoHeight
-    };
+    // Calculate scale factors based on the aspect ratio preservation
+    const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
+    const canvasAspect = canvas.width / canvas.height;
+    
+    if (videoAspect > canvasAspect) {
+      // Video is wider than canvas
+      const scale = canvas.width / videoElement.videoWidth;
+      scaleFactorsRef.current = {
+        x: scale,
+        y: scale
+      };
+    } else {
+      // Video is taller than canvas
+      const scale = canvas.height / videoElement.videoHeight;
+      scaleFactorsRef.current = {
+        x: scale,
+        y: scale
+      };
+    }
   }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
 
   useEffect(() => {
@@ -85,10 +100,19 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
     };
 
     const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+      // Apply scaling while maintaining aspect ratio
       const rawPoint = {
         x: point.x * videoElement.videoWidth * scaleFactorsRef.current.x,
         y: point.y * videoElement.videoHeight * scaleFactorsRef.current.y
       };
+      
+      // Center the coordinates if there's any offset due to aspect ratio differences
+      const xOffset = (canvas.width - (videoElement.videoWidth * scaleFactorsRef.current.x)) / 2;
+      const yOffset = (canvas.height - (videoElement.videoHeight * scaleFactorsRef.current.y)) / 2;
+      
+      rawPoint.x += xOffset;
+      rawPoint.y += yOffset;
+      
       return smoothPosition(rawPoint, index);
     };
 

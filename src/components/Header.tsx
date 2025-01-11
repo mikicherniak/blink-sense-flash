@@ -6,6 +6,7 @@ import { BpmInput } from './toggles/BpmInput';
 import { WarningEffect } from '@/hooks/useWarningFlash';
 import { Button } from './ui/button';
 import { RotateCcw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface HeaderProps {
   isDark: boolean;
@@ -36,14 +37,24 @@ export const Header: React.FC<HeaderProps> = ({
                 <h1 className={`${TEXT_SIZES.mobile.heading} sm:${TEXT_SIZES.desktop.heading} font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
                   Blin<span className="font-black">X</span>
                 </h1>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={onReset}
-                  className="h-8 w-8"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={onReset}
+                      className={`h-8 w-8 ${isDark ? 'hover:bg-neutral-700/50' : 'hover:bg-muted'}`}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent 
+                    side="right" 
+                    className={`${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-background border-border'}`}
+                  >
+                    Reset all stats
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <p className={`${TEXT_SIZES.mobile.subheading} sm:${TEXT_SIZES.desktop.subheading} leading-tight ${isDark ? 'text-white' : 'text-muted-foreground'}`}>
                 Protecting your eyes in real-time

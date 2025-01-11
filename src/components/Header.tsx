@@ -6,7 +6,7 @@ import { BpmInput } from './toggles/BpmInput';
 import { WarningEffect } from '@/hooks/useWarningFlash';
 import { Button } from './ui/button';
 import { RotateCcw } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { CustomTooltip } from './ui/custom-tooltip';
 
 interface HeaderProps {
   isDark: boolean;
@@ -37,24 +37,16 @@ export const Header: React.FC<HeaderProps> = ({
                 <h1 className={`${TEXT_SIZES.mobile.heading} sm:${TEXT_SIZES.desktop.heading} font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
                   Blin<span className="font-black">X</span>
                 </h1>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={onReset}
-                      className={`h-8 w-8 ${isDark ? 'hover:bg-neutral-700/50' : 'hover:bg-muted'}`}
-                    >
-                      <RotateCcw className={`h-4 w-4 ${isDark ? 'text-white' : 'text-foreground'}`} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent 
-                    side="right"
-                    className={`${isDark ? 'bg-neutral-800 text-white' : 'bg-white text-foreground'} border-border`}
+                <CustomTooltip content="Reset">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={onReset}
+                    className={`h-8 w-8 ${isDark ? 'hover:bg-neutral-700/50' : 'hover:bg-muted'}`}
                   >
-                    Reset
-                  </TooltipContent>
-                </Tooltip>
+                    <RotateCcw className={`h-4 w-4 ${isDark ? 'text-white' : 'text-foreground'}`} />
+                  </Button>
+                </CustomTooltip>
               </div>
               <p className={`${TEXT_SIZES.mobile.subheading} sm:${TEXT_SIZES.desktop.subheading} leading-tight ${isDark ? 'text-white' : 'text-muted-foreground'}`}>
                 Protecting your eyes in real-time

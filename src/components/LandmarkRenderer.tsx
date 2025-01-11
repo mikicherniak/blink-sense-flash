@@ -27,99 +27,68 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   videoElement,
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
+  // Increased from 1000ms to 1500ms to make the X linger longer
   const BLINK_ANIMATION_DURATION = 1500;
+  
+    const smoothPosition = (current: Point, index: number): Point => {
+      const now = Date.now();
+      const HISTORY_SIZE = 10;
+      const SMOOTHING_FACTOR = 0.3;
+      
+      if (!positionHistoryRef.current.has(index)) {
+        positionHistoryRef.current.set(index, {
+          positions: [],
+          lastUpdateTime: now,
+          isBlinking: false,
+          blinkStartTime: 0
+        });
+      }
 
-  const smoothPosition = (current: Point, index: number): Point => {
-    const now = Date.now();
-    const HISTORY_SIZE = 10;
-    const SMOOTHING_FACTOR = 0.3;
-    
-    if (!positionHistoryRef.current.has(index)) {
-      positionHistoryRef.current.set(index, {
-        positions: [],
-        lastUpdateTime: now,
-        isBlinking: false,
-        blinkStartTime: 0
-      });
-    }
+      const history = positionHistoryRef.current.get(index)!;
+      history.positions = history.positions.filter(
+        (_, i) => i >= history.positions.length - HISTORY_SIZE
+      );
+      history.positions.push(current);
+      history.lastUpdateTime = now;
 
-    const history = positionHistoryRef.current.get(index)!;
-    history.positions = history.positions.filter(
-      (_, i) => i >= history.positions.length - HISTORY_SIZE
-    );
-    history.positions.push(current);
-    history.lastUpdateTime = now;
+      if (history.positions.length < 2) return current;
 
-    if (history.positions.length < 2) return current;
+      let weightedX = 0;
+      let weightedY = 0;
+      let totalWeight = 0;
 
-    let weightedX = 0;
-    let weightedY = 0;
-    let totalWeight = 0;
+      for (let i = 0; i < history.positions.length; i++) {
+        const weight = Math.pow(i / history.positions.length, 2);
+        weightedX += history.positions[i].x * weight;
+        weightedY += history.positions[i].y * weight;
+        totalWeight += weight;
+      }
 
-    for (let i = 0; i < history.positions.length; i++) {
-      const weight = Math.pow(i / history.positions.length, 2);
-      weightedX += history.positions[i].x * weight;
-      weightedY += history.positions[i].y * weight;
-      totalWeight += weight;
-    }
+      const smoothed = {
+        x: weightedX / totalWeight,
+        y: weightedY / totalWeight
+      };
 
-    const smoothed = {
-      x: weightedX / totalWeight,
-      y: weightedY / totalWeight
+      return {
+        x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
+        y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
+      };
     };
 
-    return {
-      x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
-      y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
+    const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+      const rawPoint = {
+        x: point.x * videoElement.videoWidth * scaleX,
+        y: point.y * videoElement.videoHeight * scaleY
+      };
+      return smoothPosition(rawPoint, index);
     };
-  };
-
-  const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') {
-      console.warn('Invalid point received:', point);
-      return { x: 0, y: 0 };
-    }
-
-    // Get the actual dimensions
-    const videoWidth = videoElement.videoWidth;
-    const videoHeight = videoElement.videoHeight;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-
-    // Calculate aspect ratios
-    const videoAspect = videoWidth / videoHeight;
-    const canvasAspect = canvasWidth / canvasHeight;
-
-    // Calculate scaling factors and offsets
-    let scaleX, scaleY, offsetX = 0, offsetY = 0;
-    
-    if (canvasAspect > videoAspect) {
-      // Canvas is wider than video
-      scaleY = canvasHeight / videoHeight;
-      scaleX = scaleY;
-      offsetX = (canvasWidth - (videoWidth * scaleX)) / 2;
-    } else {
-      // Canvas is taller than video
-      scaleX = canvasWidth / videoWidth;
-      scaleY = scaleX;
-      offsetY = (canvasHeight - (videoHeight * scaleY)) / 2;
-    }
-
-    // Transform coordinates
-    const rawPoint = {
-      x: (point.x * videoWidth * scaleX) + offsetX,
-      y: (point.y * videoHeight * scaleY) + offsetY
-    };
-
-    return smoothPosition(rawPoint, index);
-  };
 
   useEffect(() => {
+    const scaleX = canvas.width / videoElement.videoWidth;
+    const scaleY = canvas.height / videoElement.videoHeight;
+
     const drawEye = (indices: number[], isLeft: boolean) => {
-      if (!indices.every(i => landmarks[i])) {
-        console.warn('Missing landmark indices for eye:', isLeft ? 'left' : 'right');
-        return;
-      }
+      if (!indices.every(i => landmarks[i])) return;
 
       // Calculate eye center and size
       const topPoint = transformCoordinate(landmarks[indices[1]], indices[1]);
@@ -187,6 +156,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const avgEAR = calculateAverageEAR();
       const now = Date.now();
       
+      // Only start blink animation when we detect a full blink sequence
       const CONSECUTIVE_FRAMES_THRESHOLD = 2;
       const MIN_TIME_BETWEEN_BLINKS = 200;
       const timeSinceLastBlink = now - leftEyeHistory.blinkStartTime;
@@ -198,6 +168,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
         leftEyeHistory.blinkStartTime = now;
         rightEyeHistory.blinkStartTime = now;
       } else if (avgEAR >= 0.45) {
+        // Reset blink state when eyes are open
         leftEyeHistory.isBlinking = false;
         rightEyeHistory.isBlinking = false;
       }
@@ -209,13 +180,12 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   }, [landmarks, canvas, ctx, videoElement]);
 
   const calculateAverageEAR = () => {
+    // Simple helper to estimate if eyes are closed based on vertical/horizontal ratio
     const getEyeRatio = (indices: number[]) => {
       const top = landmarks[indices[1]];
       const bottom = landmarks[indices[3]];
       const left = landmarks[indices[0]];
       const right = landmarks[indices[2]];
-      
-      if (!top || !bottom || !left || !right) return 1.0;
       
       const height = Math.abs(top.y - bottom.y);
       const width = Math.abs(left.x - right.x);

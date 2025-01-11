@@ -102,6 +102,8 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 
       const history = positionHistoryRef.current.get(indices[0]);
       const now = Date.now();
+      
+      // Only show X during the actual counted blink animation
       const isBlinking = history?.isBlinking && 
                         (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION;
 
@@ -153,12 +155,19 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const avgEAR = calculateAverageEAR();
       const now = Date.now();
       
-      if (avgEAR < 0.45 && !leftEyeHistory.isBlinking) {
+      // Only start blink animation when we detect a full blink sequence
+      const CONSECUTIVE_FRAMES_THRESHOLD = 2;
+      const MIN_TIME_BETWEEN_BLINKS = 200;
+      const timeSinceLastBlink = now - leftEyeHistory.blinkStartTime;
+      
+      if (avgEAR < 0.45 && !leftEyeHistory.isBlinking && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
+        console.log('Starting potential blink animation');
         leftEyeHistory.isBlinking = true;
         rightEyeHistory.isBlinking = true;
         leftEyeHistory.blinkStartTime = now;
         rightEyeHistory.blinkStartTime = now;
-      } else if (avgEAR >= 0.45 && now - leftEyeHistory.blinkStartTime >= BLINK_ANIMATION_DURATION) {
+      } else if (avgEAR >= 0.45) {
+        // Reset blink state when eyes are open
         leftEyeHistory.isBlinking = false;
         rightEyeHistory.isBlinking = false;
       }

@@ -75,14 +75,19 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   };
 
   const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-    // Calculate scale inside the transform function to ensure we have current dimensions
+    // First convert the normalized coordinates to video dimensions
+    const videoX = point.x * videoElement.videoWidth;
+    const videoY = point.y * videoElement.videoHeight;
+    
+    // Then scale to canvas dimensions
     const scaleX = canvas.width / videoElement.videoWidth;
     const scaleY = canvas.height / videoElement.videoHeight;
     
     const rawPoint = {
-      x: point.x * videoElement.videoWidth * scaleX,
-      y: point.y * videoElement.videoHeight * scaleY
+      x: videoX * scaleX,
+      y: videoY * scaleY
     };
+    
     return smoothPosition(rawPoint, index);
   };
 

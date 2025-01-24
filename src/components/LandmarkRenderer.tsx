@@ -28,94 +28,93 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
   const BLINK_ANIMATION_DURATION = 1000;
-  const scaleFactorsRef = useRef({ x: 1, y: 1, offsetX: 0, offsetY: 0 });
+  const scaleFactorsRef = useRef({ x: 1, y: 1 });
   
+  // Update scale factors whenever canvas or video dimensions change
   useEffect(() => {
-    const updateScaleFactors = () => {
-      const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
-      const canvasAspect = canvas.width / canvas.height;
-      
-      let scale: number;
-      let offsetX = 0;
-      let offsetY = 0;
-      
-      if (videoAspect > canvasAspect) {
-        // Video is wider than canvas
-        scale = canvas.height / videoElement.videoHeight;
-        offsetX = (canvas.width - (videoElement.videoWidth * scale)) / 2;
-      } else {
-        // Video is taller than canvas
-        scale = canvas.width / videoElement.videoWidth;
-        offsetY = (canvas.height - (videoElement.videoHeight * scale)) / 2;
-      }
-      
+    // Calculate scale factors based on the aspect ratio preservation
+    const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
+    const canvasAspect = canvas.width / canvas.height;
+    
+    if (videoAspect > canvasAspect) {
+      // Video is wider than canvas
+      const scale = canvas.width / videoElement.videoWidth;
       scaleFactorsRef.current = {
         x: scale,
-        y: scale,
-        offsetX,
-        offsetY
+        y: scale
+      };
+    } else {
+      // Video is taller than canvas
+      const scale = canvas.height / videoElement.videoHeight;
+      scaleFactorsRef.current = {
+        x: scale,
+        y: scale
+      };
+    }
+  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
+
+  useEffect(() => {
+    const smoothPosition = (current: Point, index: number): Point => {
+      const now = Date.now();
+      const HISTORY_SIZE = 10;
+      const SMOOTHING_FACTOR = 0.3;
+      
+      if (!positionHistoryRef.current.has(index)) {
+        positionHistoryRef.current.set(index, {
+          positions: [],
+          lastUpdateTime: now,
+          isBlinking: false,
+          blinkStartTime: 0
+        });
+      }
+
+      const history = positionHistoryRef.current.get(index)!;
+      history.positions = history.positions.filter(
+        (_, i) => i >= history.positions.length - HISTORY_SIZE
+      );
+      history.positions.push(current);
+      history.lastUpdateTime = now;
+
+      if (history.positions.length < 2) return current;
+
+      let weightedX = 0;
+      let weightedY = 0;
+      let totalWeight = 0;
+
+      for (let i = 0; i < history.positions.length; i++) {
+        const weight = Math.pow(i / history.positions.length, 2);
+        weightedX += history.positions[i].x * weight;
+        weightedY += history.positions[i].y * weight;
+        totalWeight += weight;
+      }
+
+      const smoothed = {
+        x: weightedX / totalWeight,
+        y: weightedY / totalWeight
+      };
+
+      return {
+        x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
+        y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
       };
     };
 
-    updateScaleFactors();
-  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
-
-  const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-    const { x: scale, y: scaleY, offsetX, offsetY } = scaleFactorsRef.current;
-    
-    const rawX = point.x * videoElement.videoWidth;
-    const rawY = point.y * videoElement.videoHeight;
-    
-    return smoothPosition({
-      x: (rawX * scale) + offsetX,
-      y: (rawY * scaleY) + offsetY
-    }, index);
-  };
-
-  const smoothPosition = (current: Point, index: number): Point => {
-    const now = Date.now();
-    const HISTORY_SIZE = 10;
-    const SMOOTHING_FACTOR = 0.3;
-    
-    if (!positionHistoryRef.current.has(index)) {
-      positionHistoryRef.current.set(index, {
-        positions: [],
-        lastUpdateTime: now,
-        isBlinking: false,
-        blinkStartTime: 0
-      });
-    }
-
-    const history = positionHistoryRef.current.get(index)!;
-    history.positions = history.positions.filter(
-      (_, i) => i >= history.positions.length - HISTORY_SIZE
-    );
-    history.positions.push(current);
-    history.lastUpdateTime = now;
-
-    if (history.positions.length < 2) return current;
-
-    let weightedX = 0;
-    let weightedY = 0;
-    let totalWeight = 0;
-
-    for (let i = 0; i < history.positions.length; i++) {
-      const weight = Math.pow(i / history.positions.length, 2);
-      weightedX += history.positions[i].x * weight;
-      weightedY += history.positions[i].y * weight;
-      totalWeight += weight;
-    }
-
-    const smoothed = {
-      x: weightedX / totalWeight,
-      y: weightedY / totalWeight
+    const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+      // Apply scaling while maintaining aspect ratio
+      const rawPoint = {
+        x: point.x * videoElement.videoWidth * scaleFactorsRef.current.x,
+        y: point.y * videoElement.videoHeight * scaleFactorsRef.current.y
+      };
+      
+      // Center the coordinates if there's any offset due to aspect ratio differences
+      const xOffset = (canvas.width - (videoElement.videoWidth * scaleFactorsRef.current.x)) / 2;
+      const yOffset = (canvas.height - (videoElement.videoHeight * scaleFactorsRef.current.y)) / 2;
+      
+      rawPoint.x += xOffset;
+      rawPoint.y += yOffset;
+      
+      return smoothPosition(rawPoint, index);
     };
-
-    return {
-      x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
-      y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
-    };
-  };
 
     const drawEye = (indices: number[], isLeft: boolean) => {
       if (!indices.every(i => landmarks[i])) return;

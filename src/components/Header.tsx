@@ -45,12 +45,12 @@ export const Header: React.FC<HeaderProps> = ({
                       onClick={onReset}
                       className={`h-8 w-8 ${isDark ? 'hover:bg-neutral-700/50' : 'hover:bg-muted'}`}
                     >
-                      <RotateCcw className={`h-4 w-4 ${isDark ? 'text-white' : 'text-foreground'}`} />
+                      <RotateCcw className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent 
-                    side="right"
-                    className={`${isDark ? 'bg-neutral-800 text-white' : 'bg-white text-foreground'} border-border`}
+                    side="right" 
+                    className={`${isDark ? 'bg-neutral-800 border-neutral-700' : 'bg-background border-border'}`}
                   >
                     Reset
                   </TooltipContent>

@@ -27,98 +27,101 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
   videoElement,
 }) => {
   const positionHistoryRef = useRef<Map<number, PositionHistory>>(new Map());
-  const BLINK_ANIMATION_DURATION = 1000;
-  const scaleFactorsRef = useRef({ x: 1, y: 1 });
-  
-  // Update scale factors whenever canvas or video dimensions change
-  useEffect(() => {
-    // Calculate scale factors based on the aspect ratio preservation
-    const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
-    const canvasAspect = canvas.width / canvas.height;
+  const BLINK_ANIMATION_DURATION = 1500;
+
+  const smoothPosition = (current: Point, index: number): Point => {
+    const now = Date.now();
+    const HISTORY_SIZE = 10;
+    const SMOOTHING_FACTOR = 0.3;
     
-    if (videoAspect > canvasAspect) {
-      // Video is wider than canvas
-      const scale = canvas.width / videoElement.videoWidth;
-      scaleFactorsRef.current = {
-        x: scale,
-        y: scale
-      };
-    } else {
-      // Video is taller than canvas
-      const scale = canvas.height / videoElement.videoHeight;
-      scaleFactorsRef.current = {
-        x: scale,
-        y: scale
-      };
+    if (!positionHistoryRef.current.has(index)) {
+      positionHistoryRef.current.set(index, {
+        positions: [],
+        lastUpdateTime: now,
+        isBlinking: false,
+        blinkStartTime: 0
+      });
     }
-  }, [canvas.width, canvas.height, videoElement.videoWidth, videoElement.videoHeight]);
+
+    const history = positionHistoryRef.current.get(index)!;
+    history.positions = history.positions.filter(
+      (_, i) => i >= history.positions.length - HISTORY_SIZE
+    );
+    history.positions.push(current);
+    history.lastUpdateTime = now;
+
+    if (history.positions.length < 2) return current;
+
+    let weightedX = 0;
+    let weightedY = 0;
+    let totalWeight = 0;
+
+    for (let i = 0; i < history.positions.length; i++) {
+      const weight = Math.pow(i / history.positions.length, 2);
+      weightedX += history.positions[i].x * weight;
+      weightedY += history.positions[i].y * weight;
+      totalWeight += weight;
+    }
+
+    const smoothed = {
+      x: weightedX / totalWeight,
+      y: weightedY / totalWeight
+    };
+
+    return {
+      x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
+      y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
+    };
+  };
+
+  const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
+    if (!point || typeof point.x !== 'number' || typeof point.y !== 'number') {
+      console.warn('Invalid point received:', point);
+      return { x: 0, y: 0 };
+    }
+
+    // Get the actual dimensions
+    const videoWidth = videoElement.videoWidth;
+    const videoHeight = videoElement.videoHeight;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // Calculate aspect ratios
+    const videoAspect = videoWidth / videoHeight;
+    const canvasAspect = canvasWidth / canvasHeight;
+
+    // Calculate scaling factors and offsets
+    let scaleX, scaleY, offsetX = 0, offsetY = 0;
+    
+    if (canvasAspect > videoAspect) {
+      // Canvas is wider than video
+      scaleY = canvasHeight / videoHeight;
+      scaleX = scaleY;
+      offsetX = (canvasWidth - (videoWidth * scaleX)) / 2;
+    } else {
+      // Canvas is taller than video
+      scaleX = canvasWidth / videoWidth;
+      scaleY = scaleX;
+      offsetY = (canvasHeight - (videoHeight * scaleY)) / 2;
+    }
+
+    // Transform coordinates
+    const rawPoint = {
+      x: (point.x * videoWidth * scaleX) + offsetX,
+      y: (point.y * videoHeight * scaleY) + offsetY
+    };
+
+    return smoothPosition(rawPoint, index);
+  };
 
   useEffect(() => {
-    const smoothPosition = (current: Point, index: number): Point => {
-      const now = Date.now();
-      const HISTORY_SIZE = 10;
-      const SMOOTHING_FACTOR = 0.3;
-      
-      if (!positionHistoryRef.current.has(index)) {
-        positionHistoryRef.current.set(index, {
-          positions: [],
-          lastUpdateTime: now,
-          isBlinking: false,
-          blinkStartTime: 0
-        });
-      }
-
-      const history = positionHistoryRef.current.get(index)!;
-      history.positions = history.positions.filter(
-        (_, i) => i >= history.positions.length - HISTORY_SIZE
-      );
-      history.positions.push(current);
-      history.lastUpdateTime = now;
-
-      if (history.positions.length < 2) return current;
-
-      let weightedX = 0;
-      let weightedY = 0;
-      let totalWeight = 0;
-
-      for (let i = 0; i < history.positions.length; i++) {
-        const weight = Math.pow(i / history.positions.length, 2);
-        weightedX += history.positions[i].x * weight;
-        weightedY += history.positions[i].y * weight;
-        totalWeight += weight;
-      }
-
-      const smoothed = {
-        x: weightedX / totalWeight,
-        y: weightedY / totalWeight
-      };
-
-      return {
-        x: smoothed.x + (current.x - smoothed.x) * SMOOTHING_FACTOR,
-        y: smoothed.y + (current.y - smoothed.y) * SMOOTHING_FACTOR
-      };
-    };
-
-    const transformCoordinate = (point: { x: number; y: number }, index: number): Point => {
-      // Apply scaling while maintaining aspect ratio
-      const rawPoint = {
-        x: point.x * videoElement.videoWidth * scaleFactorsRef.current.x,
-        y: point.y * videoElement.videoHeight * scaleFactorsRef.current.y
-      };
-      
-      // Center the coordinates if there's any offset due to aspect ratio differences
-      const xOffset = (canvas.width - (videoElement.videoWidth * scaleFactorsRef.current.x)) / 2;
-      const yOffset = (canvas.height - (videoElement.videoHeight * scaleFactorsRef.current.y)) / 2;
-      
-      rawPoint.x += xOffset;
-      rawPoint.y += yOffset;
-      
-      return smoothPosition(rawPoint, index);
-    };
-
     const drawEye = (indices: number[], isLeft: boolean) => {
-      if (!indices.every(i => landmarks[i])) return;
+      if (!indices.every(i => landmarks[i])) {
+        console.warn('Missing landmark indices for eye:', isLeft ? 'left' : 'right');
+        return;
+      }
 
+      // Calculate eye center and size
       const topPoint = transformCoordinate(landmarks[indices[1]], indices[1]);
       const bottomPoint = transformCoordinate(landmarks[indices[3]], indices[3]);
       const leftPoint = transformCoordinate(landmarks[indices[0]], indices[0]);
@@ -132,10 +135,12 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const history = positionHistoryRef.current.get(indices[0]);
       const now = Date.now();
       
+      // Only show X during the actual counted blink animation
       const isBlinking = history?.isBlinking && 
                         (now - history.blinkStartTime) < BLINK_ANIMATION_DURATION;
 
       if (isBlinking) {
+        // Draw X when blinking
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -145,21 +150,25 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
         ctx.lineTo(centerX - eyeWidth/2, centerY + eyeHeight/2);
         ctx.stroke();
       } else {
+        // Draw eye
         ctx.fillStyle = 'white';
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
 
+        // Draw eye shape (oval)
         ctx.beginPath();
         ctx.ellipse(centerX, centerY, eyeWidth/2, eyeHeight/2, 0, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
 
+        // Draw iris
         const irisSize = Math.min(eyeWidth, eyeHeight) * 0.4;
         ctx.fillStyle = 'black';
         ctx.beginPath();
         ctx.arc(centerX, centerY, irisSize, 0, 2 * Math.PI);
         ctx.fill();
 
+        // Add catchlight
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.arc(centerX + irisSize/4, centerY - irisSize/4, irisSize/4, 0, 2 * Math.PI);
@@ -167,8 +176,10 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       }
     };
 
+    // Clear previous frame
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Check for blinks
     const leftEyeHistory = positionHistoryRef.current.get(LEFT_EYE[0]);
     const rightEyeHistory = positionHistoryRef.current.get(RIGHT_EYE[0]);
     
@@ -192,6 +203,7 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       }
     }
 
+    // Draw the eyes
     drawEye(LEFT_EYE, true);
     drawEye(RIGHT_EYE, false);
   }, [landmarks, canvas, ctx, videoElement]);
@@ -202,6 +214,8 @@ export const LandmarkRenderer: React.FC<LandmarkRendererProps> = ({
       const bottom = landmarks[indices[3]];
       const left = landmarks[indices[0]];
       const right = landmarks[indices[2]];
+      
+      if (!top || !bottom || !left || !right) return 1.0;
       
       const height = Math.abs(top.y - bottom.y);
       const width = Math.abs(left.x - right.x);

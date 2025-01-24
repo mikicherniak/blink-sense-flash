@@ -79,7 +79,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const lastEARRef = useRef<number>(1);
   const logIntervalRef = useRef<number>(0);
   const lastBlinkTimeRef = useRef<number>(0);
-  const MIN_TIME_BETWEEN_BLINKS = 200;
+  const MIN_TIME_BETWEEN_BLINKS = 300; // Increased minimum time between blinks
+  const blinkConfirmationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -91,22 +92,16 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (!videoElement) return;
 
-      // Match canvas size to video dimensions exactly
       canvas.width = videoElement.videoWidth;
       canvas.height = videoElement.videoHeight;
-
-      // Scale the canvas display size using CSS to match container
       canvas.style.width = '100%';
       canvas.style.height = '100%';
       canvas.style.objectFit = 'cover';
-
-      // Update the canvas context
       canvasContextRef.current = canvas.getContext('2d');
     };
 
     const videoElement = document.querySelector('video');
     if (videoElement) {
-      // Wait for video metadata to be loaded before initial resize
       if (videoElement.readyState >= 2) {
         resizeCanvas();
       } else {
@@ -118,6 +113,9 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const videoElement = document.querySelector('video');
       if (videoElement) {
         videoElement.removeEventListener('loadedmetadata', resizeCanvas);
+      }
+      if (blinkConfirmationTimeoutRef.current) {
+        clearTimeout(blinkConfirmationTimeoutRef.current);
       }
     };
   }, [canvasRef]);
@@ -140,7 +138,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const avgEAR = (leftEAR + rightEAR) / 2;
 
     logIntervalRef.current++;
-    if (logIntervalRef.current % 3 === 0) {
+    if (logIntervalRef.current % 30 === 0) { // Reduced logging frequency
       console.log('Current EAR:', {
         left: leftEAR.toFixed(3),
         right: rightEAR.toFixed(3),
@@ -153,17 +151,28 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
+    // More robust blink detection logic
     if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
       if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
-        console.log('🔍 BLINK DETECTED!', {
-          EAR: avgEAR.toFixed(3),
-          threshold: BLINK_THRESHOLD,
-          previousEAR: lastEARRef.current.toFixed(3),
-          timeSinceLastBlink
-        });
+        // Start blink confirmation timeout
+        if (blinkConfirmationTimeoutRef.current) {
+          clearTimeout(blinkConfirmationTimeoutRef.current);
+        }
+        
+        blinkConfirmationTimeoutRef.current = setTimeout(() => {
+          if (lastEyeStateRef.current === 'closed') {
+            console.log('🔍 BLINK DETECTED!', {
+              EAR: avgEAR.toFixed(3),
+              threshold: BLINK_THRESHOLD,
+              previousEAR: lastEARRef.current.toFixed(3),
+              timeSinceLastBlink
+            });
+            lastBlinkTimeRef.current = now;
+            onBlink();
+          }
+        }, 50); // Short confirmation delay
+
         lastEyeStateRef.current = 'closed';
-        lastBlinkTimeRef.current = now;
-        onBlink();
       }
     } else if (avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
       console.log('👁 Eyes reopened', {

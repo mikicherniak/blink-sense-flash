@@ -18,6 +18,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 }) => {
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
+  // Handle canvas setup
   useEffect(() => {
     if (!canvasRef.current) return;
     
@@ -25,49 +26,41 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
       const canvas = canvasRef.current;
       const videoElement = document.querySelector('video');
       if (!canvas || !videoElement) return;
-      
-      // Set canvas dimensions to match video
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-      
-      // Get and store the canvas context
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      canvasContextRef.current = ctx;
+      setupCanvas(canvas, videoElement, canvasContextRef);
     };
 
-    // Initial setup
-    resizeCanvas();
-
-    // Add resize listener
-    window.addEventListener('resize', resizeCanvas);
-    
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-    };
+    return initializeCanvas(canvasRef.current, canvasContextRef, resizeCanvas);
   }, [canvasRef]);
 
-  if (!results.multiFaceLandmarks?.length) return null;
+  // Handle landmark processing and rendering
+  useEffect(() => {
+    if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
 
-  const landmarks = results.multiFaceLandmarks[0];
-  if (!landmarks) return null;
+    const canvas = canvasRef.current;
+    const ctx = canvasContextRef.current;
+    const videoElement = document.querySelector('video');
+    if (!ctx || !videoElement) return;
 
-  return (
-    <>
-      <BlinkDetectionProcessor
-        landmarks={landmarks}
-        onBlink={onBlink}
-        lastEyeStateRef={lastEyeStateRef}
-      />
-      {canvasRef.current && canvasContextRef.current && (
-        <LandmarkRenderer
-          landmarks={landmarks}
-          canvas={canvasRef.current}
-          ctx={canvasContextRef.current}
-          videoElement={document.querySelector('video') as HTMLVideoElement}
-        />
-      )}
-    </>
-  );
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const landmarks = results.multiFaceLandmarks[0];
+    if (!landmarks) return;
+
+    // Process blink detection
+    BlinkDetectionProcessor({
+      landmarks,
+      onBlink,
+      lastEyeStateRef
+    });
+
+    // Render landmarks
+    LandmarkRenderer({
+      landmarks,
+      canvas,
+      ctx,
+      videoElement
+    });
+  }, [results, canvasRef, onBlink, lastEyeStateRef]);
+
+  return null;
 };

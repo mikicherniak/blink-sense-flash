@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { calculateEAR, LEFT_EYE, RIGHT_EYE, BLINK_THRESHOLD, BLINK_BUFFER } from '@/utils/blinkDetection';
 
 interface BlinkDetectionProcessorProps {
@@ -20,7 +20,7 @@ export const BlinkDetectionProcessor: React.FC<BlinkDetectionProcessorProps> = (
   const MIN_TIME_BETWEEN_BLINKS = 200;
   const CONSECUTIVE_FRAMES_THRESHOLD = 2;
 
-  useEffect(() => {
+  const processBlinkDetection = () => {
     const leftEAR = calculateEAR(landmarks, LEFT_EYE);
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
@@ -71,7 +71,8 @@ export const BlinkDetectionProcessor: React.FC<BlinkDetectionProcessorProps> = (
     }
 
     lastEARRef.current = avgEAR;
-  }, [landmarks, onBlink, lastEyeStateRef]);
+  };
 
+  processBlinkDetection();
   return null;
 };

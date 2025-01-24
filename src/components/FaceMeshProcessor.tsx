@@ -1,7 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { LandmarkRenderer } from './LandmarkRenderer';
-import { BlinkDetectionProcessor } from './BlinkDetectionProcessor';
-import { setupCanvas, initializeCanvas } from '@/utils/canvasUtils';
+import { calculateEAR, LEFT_EYE, RIGHT_EYE, BLINK_THRESHOLD, BLINK_BUFFER } from '@/utils/blinkDetection';
 
 interface FaceMeshProcessorProps {
   results: any;
@@ -10,6 +8,67 @@ interface FaceMeshProcessorProps {
   lastEyeStateRef: React.MutableRefObject<'open' | 'closed'>;
 }
 
+// Separate the landmark drawing logic into a dedicated function
+const renderLandmarks = (
+  landmarks: any,
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  videoElement: HTMLVideoElement
+) => {
+  // Calculate scaling factors based on video and canvas dimensions
+  const scaleX = canvas.width / videoElement.videoWidth;
+  const scaleY = canvas.height / videoElement.videoHeight;
+
+  // Transform landmark coordinates to canvas space
+  const transformCoordinate = (point: { x: number; y: number }) => {
+    return {
+      x: point.x * videoElement.videoWidth * scaleX,
+      y: point.y * videoElement.videoHeight * scaleY
+    };
+  };
+
+  // Draw landmarks
+  ctx.fillStyle = '#00FF00';
+  [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
+    if (landmarks[index]) {
+      const { x, y } = transformCoordinate(landmarks[index]);
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+
+  // Draw eye outlines
+  const drawEyeOutline = (indices: number[]) => {
+    if (!indices.every(i => landmarks[i])) {
+      console.warn('Missing landmarks for eye outline');
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#00FF00';
+    ctx.lineWidth = 1;
+
+    // Define anatomically correct connection order
+    const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
+    
+    // Start with the first point
+    const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
+    ctx.moveTo(firstPoint.x, firstPoint.y);
+
+    // Connect points following the anatomical order
+    for (let i = 1; i < connectionOrder.length; i++) {
+      const point = transformCoordinate(landmarks[indices[connectionOrder[i]]]);
+      ctx.lineTo(point.x, point.y);
+    }
+
+    ctx.stroke();
+  };
+
+  drawEyeOutline(LEFT_EYE);
+  drawEyeOutline(RIGHT_EYE);
+};
+
 export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   results,
   canvasRef,
@@ -17,22 +76,52 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   lastEyeStateRef
 }) => {
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const lastEARRef = useRef<number>(1);
+  const logIntervalRef = useRef<number>(0);
+  const lastBlinkTimeRef = useRef<number>(0);
+  const MIN_TIME_BETWEEN_BLINKS = 200;
 
-  // Handle canvas setup
   useEffect(() => {
     if (!canvasRef.current) return;
     
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
+      if (!canvas) return;
+
       const videoElement = document.querySelector('video');
-      if (!canvas || !videoElement) return;
-      setupCanvas(canvas, videoElement, canvasContextRef);
+      if (!videoElement) return;
+
+      // Match canvas size to video dimensions exactly
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+
+      // Scale the canvas display size using CSS to match container
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.objectFit = 'cover';
+
+      // Update the canvas context
+      canvasContextRef.current = canvas.getContext('2d');
     };
 
-    return initializeCanvas(canvasRef.current, canvasContextRef, resizeCanvas);
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      // Wait for video metadata to be loaded before initial resize
+      if (videoElement.readyState >= 2) {
+        resizeCanvas();
+      } else {
+        videoElement.addEventListener('loadedmetadata', resizeCanvas);
+      }
+    }
+
+    return () => {
+      const videoElement = document.querySelector('video');
+      if (videoElement) {
+        videoElement.removeEventListener('loadedmetadata', resizeCanvas);
+      }
+    };
   }, [canvasRef]);
 
-  // Handle landmark processing and rendering
   useEffect(() => {
     if (!canvasRef.current || !results.multiFaceLandmarks?.length) return;
 
@@ -45,21 +134,50 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     
     const landmarks = results.multiFaceLandmarks[0];
     if (!landmarks) return;
+    
+    const leftEAR = calculateEAR(landmarks, LEFT_EYE);
+    const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
+    const avgEAR = (leftEAR + rightEAR) / 2;
 
-    // Process blink detection
-    BlinkDetectionProcessor({
-      landmarks,
-      onBlink,
-      lastEyeStateRef
-    });
+    logIntervalRef.current++;
+    if (logIntervalRef.current % 3 === 0) {
+      console.log('Current EAR:', {
+        left: leftEAR.toFixed(3),
+        right: rightEAR.toFixed(3),
+        average: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD,
+        lastEyeState: lastEyeStateRef.current
+      });
+    }
+
+    const now = Date.now();
+    const timeSinceLastBlink = now - lastBlinkTimeRef.current;
+
+    if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
+      if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
+        console.log('🔍 BLINK DETECTED!', {
+          EAR: avgEAR.toFixed(3),
+          threshold: BLINK_THRESHOLD,
+          previousEAR: lastEARRef.current.toFixed(3),
+          timeSinceLastBlink
+        });
+        lastEyeStateRef.current = 'closed';
+        lastBlinkTimeRef.current = now;
+        onBlink();
+      }
+    } else if (avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
+      console.log('👁 Eyes reopened', {
+        EAR: avgEAR.toFixed(3),
+        threshold: BLINK_THRESHOLD,
+        previousEAR: lastEARRef.current.toFixed(3)
+      });
+      lastEyeStateRef.current = 'open';
+    }
+
+    lastEARRef.current = avgEAR;
 
     // Render landmarks
-    LandmarkRenderer({
-      landmarks,
-      canvas,
-      ctx,
-      videoElement
-    });
+    renderLandmarks(landmarks, canvas, ctx, videoElement);
   }, [results, canvasRef, onBlink, lastEyeStateRef]);
 
   return null;

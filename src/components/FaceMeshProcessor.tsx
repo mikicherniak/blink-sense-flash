@@ -8,6 +8,29 @@ interface FaceMeshProcessorProps {
   lastEyeStateRef: React.MutableRefObject<'open' | 'closed'>;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+const SMOOTHING_FACTOR = 0.7; // Higher = more smoothing, but more lag
+let previousPoints: { [key: number]: Point } = {};
+
+const smoothPoint = (current: Point, index: number): Point => {
+  if (!previousPoints[index]) {
+    previousPoints[index] = current;
+    return current;
+  }
+
+  const smoothed = {
+    x: previousPoints[index].x * SMOOTHING_FACTOR + current.x * (1 - SMOOTHING_FACTOR),
+    y: previousPoints[index].y * SMOOTHING_FACTOR + current.y * (1 - SMOOTHING_FACTOR)
+  };
+
+  previousPoints[index] = smoothed;
+  return smoothed;
+};
+
 const renderLandmarks = (
   landmarks: any,
   canvas: HTMLCanvasElement,
@@ -18,11 +41,12 @@ const renderLandmarks = (
   const scaleX = canvas.width / videoElement.videoWidth;
   const scaleY = canvas.height / videoElement.videoHeight;
 
-  const transformCoordinate = (point: { x: number; y: number }) => {
-    return {
+  const transformCoordinate = (point: { x: number; y: number }, index: number) => {
+    const rawPoint = {
       x: point.x * videoElement.videoWidth * scaleX,
       y: point.y * videoElement.videoHeight * scaleY
     };
+    return smoothPoint(rawPoint, index);
   };
 
   if (showX) {
@@ -30,8 +54,8 @@ const renderLandmarks = (
     const drawX = (eyeIndices: number[]) => {
       if (!eyeIndices.every(i => landmarks[i])) return;
 
-      // Calculate eye center
-      const points = eyeIndices.map(i => transformCoordinate(landmarks[i]));
+      // Calculate eye center using smoothed coordinates
+      const points = eyeIndices.map((i, idx) => transformCoordinate(landmarks[i], i));
       const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
       const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
       
@@ -55,17 +79,7 @@ const renderLandmarks = (
     return;
   }
 
-  // Regular landmark rendering
-  ctx.fillStyle = '#00FF00';
-  [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
-    if (landmarks[index]) {
-      const { x, y } = transformCoordinate(landmarks[index]);
-      ctx.beginPath();
-      ctx.arc(x, y, 2, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  });
-
+  // Regular landmark rendering (only outlines, no circles)
   const drawEyeOutline = (indices: number[]) => {
     if (!indices.every(i => landmarks[i])) return;
 
@@ -74,11 +88,13 @@ const renderLandmarks = (
     ctx.lineWidth = 1;
 
     const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
-    const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
+    const smoothedPoints = indices.map((i) => transformCoordinate(landmarks[i], i));
+    
+    const firstPoint = smoothedPoints[connectionOrder[0]];
     ctx.moveTo(firstPoint.x, firstPoint.y);
 
     for (let i = 1; i < connectionOrder.length; i++) {
-      const point = transformCoordinate(landmarks[indices[connectionOrder[i]]]);
+      const point = smoothedPoints[connectionOrder[i]];
       ctx.lineTo(point.x, point.y);
     }
 

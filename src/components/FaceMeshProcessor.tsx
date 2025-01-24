@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { calculateEAR, LEFT_EYE, RIGHT_EYE, BLINK_THRESHOLD, BLINK_BUFFER } from '@/utils/blinkDetection';
 
 interface FaceMeshProcessorProps {
@@ -8,18 +8,16 @@ interface FaceMeshProcessorProps {
   lastEyeStateRef: React.MutableRefObject<'open' | 'closed'>;
 }
 
-// Separate the landmark drawing logic into a dedicated function
 const renderLandmarks = (
   landmarks: any,
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D,
-  videoElement: HTMLVideoElement
+  videoElement: HTMLVideoElement,
+  showX: boolean
 ) => {
-  // Calculate scaling factors based on video and canvas dimensions
   const scaleX = canvas.width / videoElement.videoWidth;
   const scaleY = canvas.height / videoElement.videoHeight;
 
-  // Transform landmark coordinates to canvas space
   const transformCoordinate = (point: { x: number; y: number }) => {
     return {
       x: point.x * videoElement.videoWidth * scaleX,
@@ -27,7 +25,37 @@ const renderLandmarks = (
     };
   };
 
-  // Draw landmarks
+  if (showX) {
+    // Draw X animation for each eye
+    const drawX = (eyeIndices: number[]) => {
+      if (!eyeIndices.every(i => landmarks[i])) return;
+
+      // Calculate eye center
+      const points = eyeIndices.map(i => transformCoordinate(landmarks[i]));
+      const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+      const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+      
+      // Calculate X size based on eye width
+      const size = Math.abs(points[0].x - points[2].x) * 0.7;
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#FF0000';
+      ctx.lineWidth = 2;
+      
+      // Draw X
+      ctx.moveTo(centerX - size/2, centerY - size/2);
+      ctx.lineTo(centerX + size/2, centerY + size/2);
+      ctx.moveTo(centerX + size/2, centerY - size/2);
+      ctx.lineTo(centerX - size/2, centerY + size/2);
+      ctx.stroke();
+    };
+
+    drawX(LEFT_EYE);
+    drawX(RIGHT_EYE);
+    return;
+  }
+
+  // Regular landmark rendering
   ctx.fillStyle = '#00FF00';
   [...LEFT_EYE, ...RIGHT_EYE].forEach(index => {
     if (landmarks[index]) {
@@ -38,25 +66,17 @@ const renderLandmarks = (
     }
   });
 
-  // Draw eye outlines
   const drawEyeOutline = (indices: number[]) => {
-    if (!indices.every(i => landmarks[i])) {
-      console.warn('Missing landmarks for eye outline');
-      return;
-    }
+    if (!indices.every(i => landmarks[i])) return;
 
     ctx.beginPath();
     ctx.strokeStyle = '#00FF00';
     ctx.lineWidth = 1;
 
-    // Define anatomically correct connection order
     const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
-    
-    // Start with the first point
     const firstPoint = transformCoordinate(landmarks[indices[connectionOrder[0]]]);
     ctx.moveTo(firstPoint.x, firstPoint.y);
 
-    // Connect points following the anatomical order
     for (let i = 1; i < connectionOrder.length; i++) {
       const point = transformCoordinate(landmarks[indices[connectionOrder[i]]]);
       ctx.lineTo(point.x, point.y);
@@ -79,8 +99,9 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const lastEARRef = useRef<number>(1);
   const logIntervalRef = useRef<number>(0);
   const lastBlinkTimeRef = useRef<number>(0);
-  const MIN_TIME_BETWEEN_BLINKS = 300; // Increased minimum time between blinks
+  const MIN_TIME_BETWEEN_BLINKS = 200; // Reduced minimum time between blinks
   const blinkConfirmationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showX, setShowX] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -138,7 +159,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const avgEAR = (leftEAR + rightEAR) / 2;
 
     logIntervalRef.current++;
-    if (logIntervalRef.current % 30 === 0) { // Reduced logging frequency
+    if (logIntervalRef.current % 30 === 0) {
       console.log('Current EAR:', {
         left: leftEAR.toFixed(3),
         right: rightEAR.toFixed(3),
@@ -151,10 +172,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
-    // More robust blink detection logic
     if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
       if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
-        // Start blink confirmation timeout
         if (blinkConfirmationTimeoutRef.current) {
           clearTimeout(blinkConfirmationTimeoutRef.current);
         }
@@ -168,9 +187,11 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
               timeSinceLastBlink
             });
             lastBlinkTimeRef.current = now;
+            setShowX(true);
+            setTimeout(() => setShowX(false), 100); // Show X for 100ms
             onBlink();
           }
-        }, 50); // Short confirmation delay
+        }, 50);
 
         lastEyeStateRef.current = 'closed';
       }
@@ -185,9 +206,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
 
     lastEARRef.current = avgEAR;
 
-    // Render landmarks
-    renderLandmarks(landmarks, canvas, ctx, videoElement);
-  }, [results, canvasRef, onBlink, lastEyeStateRef]);
+    renderLandmarks(landmarks, canvas, ctx, videoElement, showX);
+  }, [results, canvasRef, onBlink, lastEyeStateRef, showX]);
 
   return null;
 };

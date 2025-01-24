@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 
+const EFFECT_DELAY = 3000;
+const FLASH_DURATION = 100;
 const MIN_SESSION_DURATION = 10000;
-const FLASH_DURATION = 200; // Increased for better visibility
 
 export type WarningEffect = 'flash' | 'blur';
 
@@ -12,12 +13,8 @@ export const useEffectTrigger = (
   targetBPM: number = 15
 ) => {
   const [showEffect, setShowEffect] = useState(false);
+  const lowBpmStartTime = useRef<number | null>(null);
   const effectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const getRandomInterval = () => {
-    return Math.floor(Math.random() * 3000) + 3000; // Random between 3-6 seconds
-  };
 
   const checkBlinkRate = () => {
     const now = Date.now();
@@ -31,53 +28,41 @@ export const useEffectTrigger = (
     console.log('Checking blink rate:', { 
       currentBPM, 
       targetBPM, 
-      showEffect,
-      nextCheckIn: getRandomInterval(),
-      timestamp: new Date().toISOString()
+      showEffect, 
+      lowBpmStartTime: lowBpmStartTime.current,
+      timeSinceStart: now - (lowBpmStartTime.current || now)
     });
     
-    if (currentBPM < targetBPM && !showEffect) {
-      console.log('Effect triggered - Low BPM:', currentBPM, 'Target:', targetBPM);
-      setShowEffect(true);
-      
-      if (effectTimeoutRef.current) {
-        clearTimeout(effectTimeoutRef.current);
-      }
-      
-      effectTimeoutRef.current = setTimeout(() => {
-        setShowEffect(false);
-        console.log('Effect ended');
+    if (currentBPM < targetBPM) {
+      if (!lowBpmStartTime.current) {
+        lowBpmStartTime.current = now;
+      } else if (now - lowBpmStartTime.current >= EFFECT_DELAY) {
+        console.log('Effect triggered - Low BPM:', currentBPM, 'Target:', targetBPM);
+        setShowEffect(true);
         
-        // Schedule next check immediately after effect ends
-        if (checkIntervalRef.current) {
-          clearTimeout(checkIntervalRef.current);
+        if (effectTimeoutRef.current) {
+          clearTimeout(effectTimeoutRef.current);
         }
-        scheduleNextCheck();
-      }, effectType === 'flash' ? FLASH_DURATION : 400); // Reduced blur duration from 1000ms to 400ms
+        
+        effectTimeoutRef.current = setTimeout(() => {
+          setShowEffect(false);
+          lowBpmStartTime.current = null;
+        }, effectType === 'flash' ? FLASH_DURATION : 800);
+      }
+    } else {
+      lowBpmStartTime.current = null;
+      if (showEffect) {
+        setShowEffect(false);
+        if (effectTimeoutRef.current) {
+          clearTimeout(effectTimeoutRef.current);
+        }
+      }
     }
   };
 
-  const scheduleNextCheck = () => {
-    const interval = getRandomInterval();
-    console.log('Scheduling next check in:', interval, 'ms');
-    checkIntervalRef.current = setTimeout(() => {
-      checkBlinkRate();
-      scheduleNextCheck();
-    }, interval);
-  };
-
   useEffect(() => {
-    console.log('Effect trigger initialized');
-    scheduleNextCheck();
-
-    return () => {
-      if (checkIntervalRef.current) {
-        clearTimeout(checkIntervalRef.current);
-      }
-      if (effectTimeoutRef.current) {
-        clearTimeout(effectTimeoutRef.current);
-      }
-    };
+    const interval = setInterval(checkBlinkRate, 1000);
+    return () => clearInterval(interval);
   }, [getCurrentBlinksPerMinute, targetBPM]);
 
   return {

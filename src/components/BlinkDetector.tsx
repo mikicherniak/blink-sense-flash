@@ -77,6 +77,13 @@ export const BlinkDetector = () => {
     return () => clearInterval(cleanup);
   }, []);
 
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      checkBlinkRate();
+    }, 10000);
+    return () => clearInterval(checkInterval);
+  }, [blinksInLastMinute, targetBPM]);
+
   return (
     <div className="flex flex-col items-center w-full h-full">
       <BlinkEffect isVisible={showEffect || showPreview} effect={effectType} isDark={isDark} />

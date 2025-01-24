@@ -13,8 +13,10 @@ interface Point {
   y: number;
 }
 
-const SMOOTHING_FACTOR = 0.7; // Higher = more smoothing, but more lag
+const SMOOTHING_FACTOR = 0.7;
 let previousPoints: { [key: number]: Point } = {};
+const EAR_HISTORY_SIZE = 5;
+let earHistory: number[] = [];
 
 const smoothPoint = (current: Point, index: number): Point => {
   if (!previousPoints[index]) {
@@ -29,6 +31,15 @@ const smoothPoint = (current: Point, index: number): Point => {
 
   previousPoints[index] = smoothed;
   return smoothed;
+};
+
+const getMedianEAR = (ear: number): number => {
+  earHistory.push(ear);
+  if (earHistory.length > EAR_HISTORY_SIZE) {
+    earHistory.shift();
+  }
+  const sorted = [...earHistory].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
 };
 
 const renderLandmarks = (
@@ -79,7 +90,7 @@ const renderLandmarks = (
     return;
   }
 
-  // Regular landmark rendering (only outlines, no circles)
+  // Regular landmark rendering with curved lines
   const drawEyeOutline = (indices: number[]) => {
     if (!indices.every(i => landmarks[i])) return;
 
@@ -87,16 +98,28 @@ const renderLandmarks = (
     ctx.strokeStyle = '#00FF00';
     ctx.lineWidth = 1;
 
-    const connectionOrder = [0, 1, 2, 3, 4, 5, 0];
     const smoothedPoints = indices.map((i) => transformCoordinate(landmarks[i], i));
     
-    const firstPoint = smoothedPoints[connectionOrder[0]];
-    ctx.moveTo(firstPoint.x, firstPoint.y);
-
-    for (let i = 1; i < connectionOrder.length; i++) {
-      const point = smoothedPoints[connectionOrder[i]];
-      ctx.lineTo(point.x, point.y);
-    }
+    // Start from the leftmost point
+    ctx.moveTo(smoothedPoints[0].x, smoothedPoints[0].y);
+    
+    // Draw top curve
+    ctx.quadraticCurveTo(
+      smoothedPoints[1].x, smoothedPoints[1].y,
+      smoothedPoints[2].x, smoothedPoints[2].y
+    );
+    
+    // Draw bottom curve
+    ctx.quadraticCurveTo(
+      smoothedPoints[4].x, smoothedPoints[4].y,
+      smoothedPoints[3].x, smoothedPoints[3].y
+    );
+    
+    // Complete the shape
+    ctx.quadraticCurveTo(
+      smoothedPoints[5].x, smoothedPoints[5].y,
+      smoothedPoints[0].x, smoothedPoints[0].y
+    );
 
     ctx.stroke();
   };
@@ -115,7 +138,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
   const lastEARRef = useRef<number>(1);
   const logIntervalRef = useRef<number>(0);
   const lastBlinkTimeRef = useRef<number>(0);
-  const MIN_TIME_BETWEEN_BLINKS = 200; // Reduced minimum time between blinks
+  const MIN_TIME_BETWEEN_BLINKS = 200;
   const blinkConfirmationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showX, setShowX] = useState(false);
 
@@ -173,6 +196,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const leftEAR = calculateEAR(landmarks, LEFT_EYE);
     const rightEAR = calculateEAR(landmarks, RIGHT_EYE);
     const avgEAR = (leftEAR + rightEAR) / 2;
+    const medianEAR = getMedianEAR(avgEAR);
 
     logIntervalRef.current++;
     if (logIntervalRef.current % 30 === 0) {
@@ -180,6 +204,7 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
         left: leftEAR.toFixed(3),
         right: rightEAR.toFixed(3),
         average: avgEAR.toFixed(3),
+        median: medianEAR.toFixed(3),
         threshold: BLINK_THRESHOLD,
         lastEyeState: lastEyeStateRef.current
       });
@@ -188,7 +213,8 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
     const now = Date.now();
     const timeSinceLastBlink = now - lastBlinkTimeRef.current;
 
-    if (avgEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
+    // Use median EAR for more stable blink detection
+    if (medianEAR < BLINK_THRESHOLD && lastEARRef.current >= BLINK_THRESHOLD) {
       if (lastEyeStateRef.current === 'open' && timeSinceLastBlink >= MIN_TIME_BETWEEN_BLINKS) {
         if (blinkConfirmationTimeoutRef.current) {
           clearTimeout(blinkConfirmationTimeoutRef.current);
@@ -197,31 +223,25 @@ export const FaceMeshProcessor: React.FC<FaceMeshProcessorProps> = ({
         blinkConfirmationTimeoutRef.current = setTimeout(() => {
           if (lastEyeStateRef.current === 'closed') {
             console.log('🔍 BLINK DETECTED!', {
-              EAR: avgEAR.toFixed(3),
+              EAR: medianEAR.toFixed(3),
               threshold: BLINK_THRESHOLD,
               previousEAR: lastEARRef.current.toFixed(3),
               timeSinceLastBlink
             });
             lastBlinkTimeRef.current = now;
             setShowX(true);
-            setTimeout(() => setShowX(false), 100); // Show X for 100ms
+            setTimeout(() => setShowX(false), 100);
             onBlink();
           }
         }, 50);
 
         lastEyeStateRef.current = 'closed';
       }
-    } else if (avgEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
-      console.log('👁 Eyes reopened', {
-        EAR: avgEAR.toFixed(3),
-        threshold: BLINK_THRESHOLD,
-        previousEAR: lastEARRef.current.toFixed(3)
-      });
+    } else if (medianEAR >= (BLINK_THRESHOLD + BLINK_BUFFER) && lastEyeStateRef.current === 'closed') {
       lastEyeStateRef.current = 'open';
     }
 
-    lastEARRef.current = avgEAR;
-
+    lastEARRef.current = medianEAR;
     renderLandmarks(landmarks, canvas, ctx, videoElement, showX);
   }, [results, canvasRef, onBlink, lastEyeStateRef, showX]);
 
